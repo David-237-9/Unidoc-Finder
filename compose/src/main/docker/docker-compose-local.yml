@@ -1,0 +1,4 @@
+services:
+  unidoc-backend:
+    environment:
+      - BD_URL=localhost

@@ -1,0 +1,5 @@
+services:
+  unidoc-backend:
+    image: eclipse-temurin:17
+    environment:
+      - TEST=test

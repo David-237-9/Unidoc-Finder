@@ -1,0 +1,6 @@
+allprojects {
+    repositories {
+        mavenCentral()
+        maven(url = "https://plugins.gradle.org/m2/")
+    }
+}
