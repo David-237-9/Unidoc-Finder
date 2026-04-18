@@ -1,5 +1,27 @@
 services:
   unidoc-backend:
-    image: eclipse-temurin:17
+    build:
+      context: ../../../../backend
+      dockerfile: src/main/docker/Dockerfile
+    container_name: unidoc-backend
+  unidoc-frontend:
+    build:
+      context: ../../../../frontend
+      dockerfile: src/main/docker/Dockerfile
+    container_name: unidoc-frontend
+  unidoc-db:
+    image: postgres:15
+    container_name: unidoc-db
+    restart: always
     environment:
-      - TEST=test
+      POSTGRES_DB: thesis_search
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db_data:
