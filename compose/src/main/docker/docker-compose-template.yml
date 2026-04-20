@@ -14,7 +14,7 @@ services:
     container_name: unidoc-db
     restart: always
     environment:
-      POSTGRES_DB: thesis_search
+      POSTGRES_DB: uni_doc
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
