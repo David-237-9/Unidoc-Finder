@@ -22,6 +22,14 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+  unidoc-elasticsearch:
+    image: elasticsearch:8.19.14
+    container_name: unidoc-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
 
 volumes:
   db_data:
