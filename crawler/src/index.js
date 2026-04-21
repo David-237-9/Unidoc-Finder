@@ -8,27 +8,35 @@ const delay = ms => new Promise(res => setTimeout(res, ms))
 
 addUrl("https://example.com")
 
+import { extractData } from "./parser.js"
+
 async function crawl() {
     while (hasUrls()) {
         const url = getNextUrl()
-
         if (!url) continue
 
         console.log("Crawling:", url)
 
-        const html = await fetchPage(url)
-
-        if (!html) continue;
+        const page = await fetchPage(url)
+        if (!page) continue
 
         markVisited(url)
 
-        const links = extractLinks(html, url)
+        // extract data
+        const data = extractData(page)
 
-        for (const link of links) {
-            addUrl(link)
+        if (data) {
+            console.log("DATA:", data)
+            // save to postgres here
         }
 
-        // await delay(1000) // Delay between requests
+        // only extract html
+        if (page.type === "html") {
+            const links = extractLinks(page.html, url)
+            for (const link of links) {
+                addUrl(link)
+            }
+        }
     }
 
     console.log('End of crawling')

@@ -10,5 +10,18 @@ export async function fetchPage(url) {
         return null
     }
 
-    return await res.text()
+    const contentType = res.headers.get("content-type")
+
+    if (contentType.includes("application/pdf")) {
+        return {
+            type: "pdf",
+            url
+        }
+    }
+
+    return {
+        type: "html",
+        html: await res.text(),
+        url
+    }
 }

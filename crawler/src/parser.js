@@ -1,18 +1,23 @@
 import * as cheerio from "cheerio"
-import { URL } from "url"
 
-export function extractLinks(html, baseUrl) {
-    const $ = cheerio.load(html)
-    const links = []
+export function extractData(page) {
+    if (page.type === "pdf") {
+        return {
+            title: page.url.split("/").pop(),
+            fileUrl: page.url
+        }
+    }
 
-    $("a[href]").each((_, el) => {
-        const href = $(el).attr("href")
+    const $ = cheerio.load(page.html)
 
-        try {
-            const absolute = new URL(href, baseUrl).href
-            links.push(absolute)
-        } catch {}
-    })
+    const title = $("title").text()
 
-    return links
+    // basic try
+    const description = $('meta[name="description"]').attr("content")
+
+    return {
+        title,
+        abstract: description || null,
+        url: page.url
+    }
 }
