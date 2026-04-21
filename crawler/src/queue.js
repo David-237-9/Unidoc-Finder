@@ -7,16 +7,22 @@ export function addUrl(url) {
     try {
         const normalized = new URL(url).href.replace(/\/$/, ""); // remove trailing slash
 
-        // avoid useless files
+        // Avoid useless files
         if (/\.(jpg|png|gif|css|js)$/i.test(normalized)) return;
 
-        // limit to .pt urls
+        // Limit to .pt urls
         if (!normalized.includes(".pt")) return;
 
-        if (!visited.has(normalized)) {
+        if (
+            !visited.has(normalized) ||
+            normalized.includes("/handle/") ||
+            normalized.endsWith(".pdf")
+        ) {
             queue.push(normalized);
         }
-    } catch {}
+    } catch (err) {
+        // Do nothing
+    }
 }
 
 export function getNextUrl() {
