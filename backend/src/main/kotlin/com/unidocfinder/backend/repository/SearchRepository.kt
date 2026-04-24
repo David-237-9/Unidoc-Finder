@@ -6,5 +6,5 @@ import javax.management.Query
 
 @Named
 interface SearchRepository : Repository<Search>{
-    fun search(query: Query): List<Search>
+    fun search(query: String, page: Int, size: Int): List<Search>
 }
