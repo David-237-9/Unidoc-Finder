@@ -14,11 +14,12 @@ export function addUrl(url) {
         if (!normalized.includes(".pt")) return;
 
         if (
-            !visited.has(normalized) ||
-            normalized.includes("/handle/") ||
-            normalized.endsWith(".pdf")
+            !visited.has(normalized) && (
+                normalized.includes("/handle/") ||
+                normalized.endsWith(".pdf")
+            )
         ) {
-            queue.push(normalized);
+            queue.push(normalized)
         }
     } catch (err) {
         // Do nothing

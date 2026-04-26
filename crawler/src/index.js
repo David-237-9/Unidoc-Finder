@@ -1,6 +1,6 @@
 import { addUrl, getNextUrl, markVisited, hasUrls } from "./queue.js"
 import { fetchPage } from "./fetcher.js"
-import { extractData } from "./parser.js"
+import { extractData, extractLinks } from "./parser.js"
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0" // test only, remove later, allows crawling sites with invalid SSL certificates
 
@@ -8,7 +8,7 @@ const seenDocs = new Set()
 
 const delay = ms => new Promise(res => setTimeout(res, ms))
 
-addUrl("https://repositorio.ipl.pt/browse/dateissued")
+addUrl("https://repositorio.ipl.pt/handle/10400.21/1") // seed URL, can be changed to any .pt repo page
 
 async function crawl() {
     while (hasUrls()) {
@@ -20,10 +20,8 @@ async function crawl() {
         const page = await fetchPage(url)
         if (!page) continue
 
-        markVisited(url)
-
         // extract data
-        const data = extractData(page)
+        const data = await extractData(page)
 
         if (data && !isDuplicate(data)) {
             console.log("DATA:", data)
@@ -38,6 +36,8 @@ async function crawl() {
                 addUrl(link)
             }
         }
+
+        markVisited(url)
     }
 
     console.log('End of crawling')

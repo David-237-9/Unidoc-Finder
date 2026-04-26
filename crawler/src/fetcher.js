@@ -13,8 +13,11 @@ export async function fetchPage(url) {
     const contentType = res.headers.get("content-type")
 
     if (contentType.includes("application/pdf")) {
+        const buffer = await res.arrayBuffer()
+
         return {
             type: "pdf",
+            buffer: Buffer.from(buffer),
             url
         }
     }

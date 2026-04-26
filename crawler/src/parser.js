@@ -1,10 +1,24 @@
 import * as cheerio from "cheerio"
+import { createRequire } from "module" // Needed to import pdf-parse
+const require = createRequire(import.meta.url)
+const pdfParse = require("pdf-parse")
 
-export function extractData(page) {
+export async function extractData(page) {
     if (page.type === "pdf") {
-        return {
-            title: decodeURIComponent(page.url.split("/").pop()),
-            fileUrl: page.url
+        try {
+            const data = await pdfParse(page.buffer)
+
+            const text = data.text
+
+            return {
+                title: extractTitleFromText(text) || decodeURIComponent(page.url.split("/").pop()),
+                abstract: extractAbstract(text),
+                fileUrl: page.url,
+                rawText: text.slice(0, 2000) // opcional (limita tamanho)
+            }
+        } catch (err) {
+            console.log("PDF parse error:", page.url)
+            return null
         }
     }
 
@@ -17,7 +31,7 @@ export function extractData(page) {
         const getMeta = (name) =>
             $(`meta[name="${name}"]`).attr("content") || null
 
-        return {
+        const metadata = {
             title: getMeta("DC.title"),
             authors: [getMeta("DC.creator")].filter(Boolean),
             abstract: getMeta("DC.description"),
@@ -25,6 +39,36 @@ export function extractData(page) {
             url: page.url,
             fileUrl: extractPdfLink($, page.url)
         }
+
+        // If we found a PDF link, try to fetch and parse it to enrich metadata
+        if (metadata.fileUrl) {
+            try {
+                const res = await fetch(metadata.fileUrl)
+                const buffer = Buffer.from(await res.arrayBuffer())
+
+                const pdfData = await pdfParse(buffer)
+                const text = pdfData.text
+
+                // Extract abstract if empty
+                if (!metadata.abstract) {
+                    metadata.abstract = extractAbstract(text)
+                }
+
+                // Save partial text?
+                metadata.rawText = text.slice(0, 2000)
+
+            } catch (err) {
+                console.log("Error enriching PDF:", metadata.fileUrl)
+            }
+        }
+
+        console.log({
+            title: metadata.title,
+            hasAbstract: !!metadata.abstract,
+            hasPdf: !!metadata.fileUrl
+        })
+
+        return metadata
     }
 
     // General
@@ -61,4 +105,39 @@ function extractUniversityFromUrl(url) {
     } catch {
         return null
     }
+}
+
+function extractTitleFromText(text) {
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean)
+
+    // normalmente título está nas primeiras linhas
+    return lines[0]?.length > 10 ? lines[0] : null
+}
+
+function extractAbstract(text) {
+    const match = text.match(/abstract[:\s]+([\s\S]{100,1000})/i)
+    return match ? match[1].trim() : null
+}
+
+export function extractLinks(html, baseUrl) {
+    const $ = cheerio.load(html)
+    const links = new Set()
+
+    $("a[href]").each((_, el) => {
+        const href = $(el).attr("href")
+        if (!href) return
+
+        try {
+            const absolute = new URL(href, baseUrl).href
+
+            // normalizar (remove trailing slash)
+            const normalized = absolute.replace(/\/$/, "")
+
+            links.add(normalized)
+        } catch {
+            // ignora URLs inválidas
+        }
+    })
+
+    return Array.from(links)
 }
