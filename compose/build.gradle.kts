@@ -50,6 +50,13 @@ val packageDockerCompose by tasks.registering(Zip::class) {
     }
 }
 
+val buildDockerImages by tasks.registering {
+    group = "docker"
+    description = "Builds Docker images for backend and frontend"
+
+    dependsOn(":backend:buildDockerImage", ":frontend:buildDockerImage")
+}
+
 tasks.assemble {
     dependsOn(packageDockerCompose)
 }

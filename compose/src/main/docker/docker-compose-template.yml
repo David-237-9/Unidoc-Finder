@@ -1,14 +1,18 @@
 services:
   unidoc-backend:
-    build:
-      context: ../../../../backend
-      dockerfile: src/main/docker/Dockerfile
+    image: unidoc-backend
     container_name: unidoc-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - unidoc-network
   unidoc-frontend:
-    build:
-      context: ../../../../frontend
-      dockerfile: src/main/docker/Dockerfile
+    image: unidoc-frontend
     container_name: unidoc-frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - unidoc-network
   unidoc-db:
     image: postgres:15
     container_name: unidoc-db
@@ -22,6 +26,8 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - unidoc-network
   unidoc-elasticsearch:
     image: elasticsearch:8.19.14
     container_name: unidoc-elasticsearch
@@ -30,6 +36,12 @@ services:
       - xpack.security.enabled=false
     ports:
       - "9200:9200"
+    networks:
+      - unidoc-network
 
 volumes:
   db_data:
+
+networks:
+  unidoc-network:
+    driver: bridge

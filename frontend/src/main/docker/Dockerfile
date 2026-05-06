@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:latest
 
 WORKDIR /app
 
@@ -9,8 +9,8 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Expose React dev server port
-EXPOSE 3000
+# Expose Vite dev server port
+EXPOSE 5173
 
 # Start dev server
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

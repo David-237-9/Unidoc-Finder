@@ -1,0 +1,9 @@
+services:
+  unidoc-frontend:
+    build:
+      context: ../../..
+      dockerfile: src/main/docker/Dockerfile
+    image: unidoc-frontend
+    container_name: unidoc-frontend
+    ports:
+      - "5173:5173"

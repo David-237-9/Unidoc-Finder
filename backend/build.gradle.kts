@@ -29,7 +29,6 @@ dependencies {
     implementation("org.jdbi:jdbi3-kotlin:3.37.1")
     implementation("org.jdbi:jdbi3-postgres:3.37.1")
     implementation("org.postgresql:postgresql:42.7.2")
-    implementation("com.h2database:h2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -45,4 +44,18 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+val buildDockerImage by tasks.registering(Exec::class) {
+    group = "docker"
+    description = "Builds the Docker image for the backend"
+
+    dependsOn("bootJar")
+
+    workingDir(project.projectDir)
+    commandLine("docker", "compose", "-f", "src/main/docker/docker-compose.yml", "build")
+}
+
+tasks.named("assemble") {
+    finalizedBy(buildDockerImage)
 }

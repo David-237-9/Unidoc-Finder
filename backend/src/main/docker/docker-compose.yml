@@ -1,0 +1,7 @@
+services:
+  unidoc-backend:
+    build:
+      context: ../../..
+      dockerfile: src/main/docker/Dockerfile
+    image: unidoc-backend
+    container_name: unidoc-backend
