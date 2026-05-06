@@ -3,7 +3,13 @@ plugins {
     base
 }
 
+tasks.register<com.github.gradle.node.npm.task.NpmTask>("appNpmInstall") {
+    args.set(listOf("install"))
+}
+
 tasks.register<com.github.gradle.node.npm.task.NpmTask>("appNpmBuild") {
+    dependsOn("appNpmInstall")
+
     args.set(listOf("run", "build"))
 }
 
