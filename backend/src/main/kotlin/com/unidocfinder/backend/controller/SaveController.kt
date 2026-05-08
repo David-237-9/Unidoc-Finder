@@ -1,6 +1,6 @@
 package com.unidocfinder.backend.controller
 
-import com.unidocfinder.backend.domain.Search
+import com.unidocfinder.backend.domain.ThesisRequest
 import com.unidocfinder.backend.domain.University
 import com.unidocfinder.backend.service.SaveService
 import org.springframework.http.HttpStatus
@@ -26,9 +26,9 @@ class SaveController(private val saveService: SaveService) {
     }
 
     @PostMapping("/thesis")
-    fun createThesis(@RequestBody thesis: Search): ResponseEntity<*> {
+    fun createThesis(@RequestBody request: ThesisRequest): ResponseEntity<*> {
         return try {
-            val result = saveService.saveThesis(thesis)
+            val result = saveService.saveThesis(request)
             ResponseEntity.status(HttpStatus.CREATED).body(result)
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

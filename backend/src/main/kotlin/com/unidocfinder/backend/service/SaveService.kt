@@ -1,7 +1,7 @@
 package com.unidocfinder.backend.service
 
-import com.unidocfinder.backend.domain.Search
-import com.unidocfinder.backend.domain.SearchResult
+import com.unidocfinder.backend.domain.Thesis
+import com.unidocfinder.backend.domain.ThesisRequest
 import com.unidocfinder.backend.domain.University
 import com.unidocfinder.backend.repository.TransactionManager
 import jakarta.inject.Named
@@ -15,22 +15,23 @@ class SaveService(private val transactionManager: TransactionManager) {
         }
     }
 
-    fun saveThesis(thesis: Search): SearchResult {
+    fun saveThesis(request: ThesisRequest): Thesis {
         return transactionManager.run {
-            // Validate that the university exists
-            val university = universityRepository.findById(thesis.universityId)
-                ?: throw IllegalArgumentException("University with ID ${thesis.universityId} not found")
+            // Get the existing university by ID
+            val university = universityRepository.findById(request.universityId)
+                ?: throw IllegalArgumentException("University with ID ${request.universityId} not found")
 
-            searchRepository.save(thesis)
-
-            SearchResult(
-                id = thesis.id,
-                title = thesis.title,
-                abstract = thesis.abstract,
-                year = thesis.year,
-                url = thesis.url,
+            // Create thesis with the existing university
+            val thesis = Thesis(
+                title = request.title,
+                abstract = request.abstract,
+                year = request.year,
+                url = request.url,
                 university = university
             )
+
+            searchRepository.save(thesis)
+            thesis
         }
     }
 }

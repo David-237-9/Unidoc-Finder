@@ -1,6 +1,6 @@
 package com.unidocfinder.backend.service
 
-import com.unidocfinder.backend.domain.SearchResult
+import com.unidocfinder.backend.domain.Thesis
 import com.unidocfinder.backend.repository.TransactionManager
 import jakarta.inject.Named
 
@@ -11,7 +11,7 @@ sealed class SearchError {
 
 @Named
 class SearchService(private val transactionManager: TransactionManager) {
-    fun search(query: String, page: Int, size: Int): Either<SearchError, List<SearchResult>> {
+    fun search(query: String, page: Int, size: Int): Either<SearchError, List<Thesis>> {
         return transactionManager.run {
             val searchResult =
                 (searchRepository as com.unidocfinder.backend.jdbi.SearchRepositoryJdbi).searchWithUniversity(

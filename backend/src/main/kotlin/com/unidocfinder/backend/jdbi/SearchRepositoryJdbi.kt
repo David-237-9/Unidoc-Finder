@@ -1,73 +1,93 @@
 package com.unidocfinder.backend.jdbi
 
-import com.unidocfinder.backend.domain.Search
-import com.unidocfinder.backend.domain.SearchResult
+import com.unidocfinder.backend.domain.Thesis
 import com.unidocfinder.backend.domain.University
 import com.unidocfinder.backend.repository.SearchRepository
 import org.jdbi.v3.core.Handle
 import java.util.*
 
 class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
-    override fun search(query: String, page: Int, size: Int): List<Search> {
+    override fun search(query: String, page: Int, size: Int): List<Thesis> {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT * FROM thesis
-            WHERE title ILIKE :query OR abstract ILIKE :query
+            SELECT t.id, t.title, t.abstract, t.year, t.url,
+                   u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
+            FROM thesis t
+            JOIN university u ON t.university_id = u.id
+            WHERE t.title ILIKE :query OR t.abstract ILIKE :query
             LIMIT :size OFFSET :offset
             """.trimIndent()
         ).bind("query", "%$query%").bind("size", size).bind("offset", offset).map { rs, _ ->
-            Search(
+            Thesis(
                 id = UUID.fromString(rs.getString("id")),
                 title = rs.getString("title"),
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
-                universityId = UUID.fromString(rs.getString("university_id"))
+                university = University(
+                    id = UUID.fromString(rs.getString("u_id")),
+                    name = rs.getString("u_name"),
+                    repoUrl = rs.getString("u_repo_url")
+                )
             )
         }.list()
     }
 
-    override fun findById(id: UUID): Search? {
+    override fun findById(id: UUID): Thesis? {
         return handle.createQuery(
             """
-        SELECT * FROM thesis
-        WHERE id = :id::uuid
-        """.trimIndent()
+            SELECT t.id, t.title, t.abstract, t.year, t.url,
+                   u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
+            FROM thesis t
+            JOIN university u ON t.university_id = u.id
+            WHERE t.id = :id::uuid
+            """.trimIndent()
         ).bind("id", id.toString()).map { rs, _ ->
-            Search(
+            Thesis(
                 id = UUID.fromString(rs.getString("id")),
                 title = rs.getString("title"),
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
-                universityId = UUID.fromString(rs.getString("university_id"))
+                university = University(
+                    id = UUID.fromString(rs.getString("u_id")),
+                    name = rs.getString("u_name"),
+                    repoUrl = rs.getString("u_repo_url")
+                )
             )
         }.findOne().orElse(null)
     }
 
     override fun findAll(
         page: Int, size: Int
-    ): List<Search> {
+    ): List<Thesis> {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-        SELECT * FROM thesis
-        LIMIT :size OFFSET :offset
-        """.trimIndent()
+            SELECT t.id, t.title, t.abstract, t.year, t.url,
+                   u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
+            FROM thesis t
+            JOIN university u ON t.university_id = u.id
+            LIMIT :size OFFSET :offset
+            """.trimIndent()
         ).bind("size", size).bind("offset", offset).map { rs, _ ->
-            Search(
+            Thesis(
                 id = UUID.fromString(rs.getString("id")),
                 title = rs.getString("title"),
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
-                universityId = UUID.fromString(rs.getString("university_id"))
+                university = University(
+                    id = UUID.fromString(rs.getString("u_id")),
+                    name = rs.getString("u_name"),
+                    repoUrl = rs.getString("u_repo_url")
+                )
             )
         }.list()
     }
 
-    override fun save(entity: Search) {
+    override fun save(entity: Thesis) {
         handle.createUpdate(
             """
             INSERT INTO thesis (id, title, abstract, year, url, university_id)
@@ -80,7 +100,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 university_id = EXCLUDED.university_id
             """
         ).bind("id", entity.id.toString()).bind("title", entity.title).bind("abstract", entity.abstract)
-            .bind("year", entity.year).bind("url", entity.url).bind("universityId", entity.universityId.toString())
+            .bind("year", entity.year).bind("url", entity.url).bind("universityId", entity.university.id.toString())
             .execute()
     }
 
@@ -100,11 +120,11 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         ).execute()
     }
 
-    fun searchWithUniversity(query: String, page: Int, size: Int): List<SearchResult> {
+    fun searchWithUniversity(query: String, page: Int, size: Int): List<Thesis> {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url, t.university_id,
+            SELECT t.id, t.title, t.abstract, t.year, t.url,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -112,7 +132,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
             LIMIT :size OFFSET :offset
             """.trimIndent()
         ).bind("query", "%$query%").bind("size", size).bind("offset", offset).map { rs, _ ->
-            SearchResult(
+            Thesis(
                 id = UUID.fromString(rs.getString("id")),
                 title = rs.getString("title"),
                 abstract = rs.getString("abstract"),
