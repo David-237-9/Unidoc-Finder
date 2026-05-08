@@ -10,7 +10,7 @@ class UniversityRepositoryJdbi(private val handle: Handle) : UniversityRepositor
         return handle.createQuery(
             """
             SELECT * FROM university
-            WHERE id = :id
+            WHERE id = :id::uuid
             """.trimIndent()
         ).bind("id", id.toString()).map { rs, _ ->
             University(
@@ -43,13 +43,13 @@ class UniversityRepositoryJdbi(private val handle: Handle) : UniversityRepositor
         handle.createUpdate(
             """
             INSERT INTO university (id, name, repo_url)
-            VALUES (:id, :name, :repo_url)
+            VALUES (:id::uuid, :name, :repo_url)
             ON CONFLICT (id) DO UPDATE SET
                 name = EXCLUDED.name,
                 repo_url = EXCLUDED.repo_url
             """
         )
-            .bind("id", entity.id)
+            .bind("id", entity.id.toString())
             .bind("name", entity.name)
             .bind("repo_url", entity.repoUrl)
             .execute()
@@ -58,10 +58,10 @@ class UniversityRepositoryJdbi(private val handle: Handle) : UniversityRepositor
     override fun deleteById(id: UUID) {
         handle.createUpdate(
             """
-            DELETE FROM university WHERE id = :id
+            DELETE FROM university WHERE id = :id::uuid
             """
         )
-            .bind("id", id)
+            .bind("id", id.toString())
             .execute()
     }
 

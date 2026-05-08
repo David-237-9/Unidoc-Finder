@@ -2,11 +2,11 @@ package com.unidocfinder.backend.domain
 
 import java.util.UUID
 
-data class Search (
+data class Thesis(
     val id: UUID = UUID.randomUUID(),
     val title: String,
     val abstract: String,
     val year: Int,
     val url: String,
-    val universityId: UUID,
+    val university: University,
 )

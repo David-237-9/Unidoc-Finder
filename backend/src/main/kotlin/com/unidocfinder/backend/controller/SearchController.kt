@@ -1,6 +1,5 @@
 package com.unidocfinder.backend.controller
 
-import com.unidocfinder.backend.service.Either
 import com.unidocfinder.backend.service.Failure
 import com.unidocfinder.backend.service.SearchService
 import com.unidocfinder.backend.service.Success
@@ -21,13 +20,11 @@ class SearchController(private val searchService: SearchService) {
         @RequestParam(value = "query", required = true) query: String,
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "10") size: Int
-    ) : ResponseEntity<*> {
-        val result = searchService.search(query, page, size)
-
-        return when (result) {
+    ): ResponseEntity<*> {
+        return when (val result = searchService.search(query, page, size)) {
             is Success -> ResponseEntity.ok(result.value)
-            is Failure -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the search")
+            is Failure -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while processing the search")
         }
     }
-
 }
