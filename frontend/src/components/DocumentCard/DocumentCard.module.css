@@ -1,0 +1,93 @@
+.card {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr) 172px;
+    align-items: center;
+    gap: 22px;
+    min-height: 138px;
+    padding: 22px 22px 22px 26px;
+    background: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+}
+
+.year {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 24px;
+    background: #8f86ec;
+    color: #ffffff;
+    border-radius: 3px;
+    font-weight: 700;
+}
+
+.content {
+    min-width: 0;
+}
+
+.content h2 {
+    margin: 0 0 7px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1rem, 2vw, 1.28rem);
+    font-weight: 500;
+}
+
+.content h2 a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #1f1f1f;
+    text-decoration: none;
+}
+
+.content h2 a:hover {
+    text-decoration: underline;
+}
+
+.abstract {
+    display: -webkit-box;
+    max-width: 650px;
+    margin: 0 0 14px;
+    overflow: hidden;
+    color: #5c5c5c;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.meta {
+    display: grid;
+    justify-items: end;
+    gap: 14px;
+}
+
+.typeBadge {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 70px;
+    border-radius: 999px;
+    background: #8f86ec;
+    color: #ffffff;
+    padding: 7px 16px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+@media (max-width: 760px) {
+    .card {
+        grid-template-columns: 1fr;
+    }
+
+    .meta {
+        justify-items: start;
+    }
+}

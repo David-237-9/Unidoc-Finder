@@ -1,0 +1,16 @@
+.brand {
+    display: flex;
+    width: 148px;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.name {
+    max-width: 92px;
+    color: #5d5d70;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: right;
+}

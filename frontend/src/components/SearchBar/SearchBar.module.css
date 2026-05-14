@@ -1,0 +1,80 @@
+.searchBar {
+    display: grid;
+    grid-template-columns: 180px minmax(240px, 1fr) 72px;
+    width: min(886px, calc(100vw - 48px));
+    min-height: 58px;
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 11px;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.22);
+}
+
+.selectLabel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 2px solid rgba(150, 135, 255, 0.28);
+    color: #171717;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.selectLabel span {
+    pointer-events: none;
+}
+
+.selectLabel select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.inputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-inline: 26px;
+    color: #9b9b9b;
+}
+
+.inputWrapper input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    color: #222222;
+    font-size: 1rem;
+}
+
+.inputWrapper input::placeholder {
+    color: #8b8b8b;
+}
+
+.submitButton {
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: #101010;
+    cursor: pointer;
+}
+
+@media (max-width: 760px) {
+    .searchBar {
+        grid-template-columns: 1fr;
+    }
+
+    .selectLabel {
+        min-height: 52px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(150, 135, 255, 0.28);
+    }
+
+    .submitButton {
+        min-height: 52px;
+    }
+}

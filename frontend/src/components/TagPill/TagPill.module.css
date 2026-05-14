@@ -1,0 +1,25 @@
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 999px;
+    background: #f39aa7;
+    color: #ffffff;
+    padding: 5px 12px;
+    font-size: 0.76rem;
+    line-height: 1;
+}
+
+.tag button {
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+}

@@ -1,0 +1,69 @@
+.sidebar {
+    display: grid;
+    align-self: start;
+    gap: 22px;
+    width: 275px;
+    padding: 24px 20px 18px;
+    background: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.fieldWithIcon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #e7eef6;
+    color: #6f7f91;
+    padding: 8px 10px;
+}
+
+.fieldWithIcon input {
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #222222;
+    font-size: 0.75rem;
+}
+
+.checkboxGroup {
+    display: grid;
+    gap: 9px;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6c6c6c;
+    font-size: 0.9rem;
+}
+
+.checkboxLabel input {
+    width: 14px;
+    height: 14px;
+    accent-color: #111827;
+}
+
+.tagList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.seeMoreButton {
+    width: max-content;
+    border: 0;
+    background: transparent;
+    color: #b2b2b2;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+@media (max-width: 900px) {
+    .sidebar {
+        width: 100%;
+    }
+}

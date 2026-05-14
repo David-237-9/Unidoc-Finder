@@ -1,0 +1,24 @@
+.section {
+    display: grid;
+    gap: 12px;
+}
+
+.header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    border: 0;
+    background: #86b8ee;
+    color: #1b2430;
+    padding: 8px 12px;
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+}
+
+.content {
+    display: grid;
+    gap: 9px;
+    padding-inline: 18px 8px;
+}
