@@ -46,7 +46,7 @@ Services will be available at:
 - **Frontend**: http://localhost:5173
 - **Database**: localhost:5432 (PostgreSQL)
 - **Elasticsearch**: http://localhost:9200
-- 
+-
 ### Run Containers
 
 ```bash
@@ -57,4 +57,14 @@ docker-compose -f compose/build/docker-compose-runner-local.yml up -d
 
 ```bash
 docker-compose -f compose/build/docker-compose-runner-local.yml down
+```
+
+### Sync Elasticsearch
+For Linux/Mac:
+```bash
+curl -X POST http://localhost:8080/api/search/sync -H "Content-Type: application/json" -v
+```
+For Windows (PowerShell):
+```powershell
+Invoke-WebRequest -Uri http://localhost:8080/api/search/sync -Method POST -ContentType "application/json" -Verbose
 ```

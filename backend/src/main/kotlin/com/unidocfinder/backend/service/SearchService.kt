@@ -1,25 +1,25 @@
 package com.unidocfinder.backend.service
 
-import com.unidocfinder.backend.domain.Thesis
-import com.unidocfinder.backend.repository.TransactionManager
+import com.unidocfinder.backend.domain.ThesisDocument
+import com.unidocfinder.backend.repository.ThesisElasticRepository
 import jakarta.inject.Named
-
 
 sealed class SearchError {
     data object SearchNotFound : SearchError()
 }
 
 @Named
-class SearchService(private val transactionManager: TransactionManager) {
-    fun search(query: String, page: Int, size: Int): Either<SearchError, List<Thesis>> {
-        return transactionManager.run {
-            val searchResult =
-                (searchRepository as com.unidocfinder.backend.jdbi.SearchRepositoryJdbi).searchWithUniversity(
-                    query,
-                    page,
-                    size
-                )
-            success(searchResult)
+class SearchService(private val thesisElasticRepository: ThesisElasticRepository) {
+    fun search(query: String, page: Int, size: Int): Either<SearchError, List<ThesisDocument>> {
+        return try {
+            val searchResult = thesisElasticRepository.searchThesis(query)
+                .drop((page - 1) * size)
+                .take(size)
+
+            Success(searchResult)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Failure(SearchError.SearchNotFound)
         }
     }
 }

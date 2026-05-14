@@ -1,0 +1,4 @@
+package com.unidocfinder.backend.elasticsearch
+import com.unidocfinder.backend.domain.ThesisDocument
+import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
+interface ElasticsearchThesisRepository : ElasticsearchRepository<ThesisDocument, String>
