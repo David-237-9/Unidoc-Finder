@@ -5,3 +5,10 @@ services:
   unidoc-frontend:
     environment:
       - VITE_BACKEND_URL=http://unidoc-backend:8080
+    volumes:
+      - ../../../../frontend/src:/app/src
+      - ../../../../frontend/public:/app/public
+      - ../../../../frontend/index.html:/app/index.html
+      - ../../../../frontend/vite.config.ts:/app/vite.config.ts
+      - ../../../../frontend/tsconfig.json:/app/tsconfig.json
+      - ../../../../frontend/package.json:/app/package.json

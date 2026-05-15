@@ -2,6 +2,6 @@ services:
   unidoc-frontend:
     build:
       context: ../../..
-      dockerfile: src/main/docker/Dockerfile
+      dockerfile: src/main/docker/Dockerfile.dev
     image: unidoc-frontend
     container_name: unidoc-frontend
