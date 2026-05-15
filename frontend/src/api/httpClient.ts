@@ -1,4 +1,4 @@
-const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_URL ?? '/api');
+const API_BASE_URL = '/api';
 
 export class ApiError extends Error {
     public readonly status: number
@@ -28,10 +28,6 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     }
 
     return payload as T;
-}
-
-function normalizeBaseUrl(value: string): string {
-    return value.endsWith('/') ? value.slice(0, -1) : value;
 }
 
 async function readResponsePayload(response: Response): Promise<unknown> {

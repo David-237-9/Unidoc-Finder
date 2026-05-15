@@ -2,3 +2,6 @@ services:
   unidoc-backend:
     environment:
       - BD_URL=localhost
+  unidoc-frontend:
+    environment:
+      - VITE_BACKEND_URL=http://unidoc-backend:8080

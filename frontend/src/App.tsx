@@ -11,7 +11,7 @@ const PAGE_SIZE = 10;
 
 const initialFilters: SearchFilters = {
     university: '',
-    category: [''],
+    category: [],
     subjects: [],
     author: '',
     publicationRange: null
@@ -94,3 +94,4 @@ function matchesSearch(
 
     return matchesType && matchesUniversity && matchesCategory && matchesSubjects && matchesPublicationRange;
 }
+

@@ -1,90 +1,35 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {searchThesis} from '../api/searchApi';
 import {mapThesisToDocument} from '../mappers/thesisMapper';
 import type {DocumentRecord} from '../types/document';
 
-interface ThesisSearchState {
-    documents: DocumentRecord[];
-    isLoading: boolean;
-    error: string | null;
-}
-
-interface UseThesisSearchParams {
-    query: string;
-    page: number;
-    size: number;
-}
-
-interface ThesisSearchResult {
-    requestKey: string;
-    documents: DocumentRecord[];
-    error: string | null;
-}
-
-export function useThesisSearch({query, page, size}: UseThesisSearchParams): ThesisSearchState {
-    const normalizedQuery = useMemo(() => query.trim(), [query]);
-
-    const requestKey = useMemo(
-        () => `${normalizedQuery}:${page}:${size}`,
-        [normalizedQuery, page, size]
-    );
-
-    const [result, setResult] = useState<ThesisSearchResult | null>(null);
+export function useThesisSearch({query, page, size}: {query: string; page: number; size: number}) {
+    const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!normalizedQuery) {
+        if (!query.trim()) {
+            setDocuments([]);
             return;
         }
 
-        const controller = new AbortController();
+        setIsLoading(true);
+        setError(null);
 
-        searchThesis(
-            {
-                query: normalizedQuery,
-                page,
-                size
-            },
-            controller.signal
-        )
+        searchThesis({query, page, size})
             .then((theses) => {
-                if (controller.signal.aborted) {
-                    return;
-                }
-
-                setResult({
-                    requestKey,
-                    documents: theses.map(mapThesisToDocument),
-                    error: null
-                });
+                setDocuments(theses.map(mapThesisToDocument));
+                setIsLoading(false);
             })
-            .catch((error: unknown) => {
-                if (controller.signal.aborted) {
-                    return;
-                }
-
-                setResult({
-                    requestKey,
-                    documents: [],
-                    error: error instanceof Error ? error.message : 'Não foi possível obter resultados da API.'
-                });
+            .catch((err) => {
+                setError(err instanceof Error ? err.message : 'Failed to fetch results');
+                setDocuments([]);
+                setIsLoading(false);
             });
 
-        return () => controller.abort();
-    }, [normalizedQuery, page, size, requestKey]);
+        return () => {};
+    }, [query, page, size]);
 
-    if (!normalizedQuery) {
-        return {
-            documents: [],
-            isLoading: false,
-            error: null
-        };
-    }
-
-    const hasCurrentResult = result?.requestKey === requestKey;
-
-    return {
-        documents: hasCurrentResult ? result.documents : [],
-        isLoading: !hasCurrentResult,
-        error: hasCurrentResult ? result.error : null
-    };
+    return {documents, isLoading, error};
 }
