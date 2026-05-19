@@ -1,16 +1,17 @@
 {
   "name": "crawler",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "license": "ISC",
   "author": "David Sousa, Nuno Patrocínio",
   "type": "module",
-  "main": "src/index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/localsearch/search.js",
+    "build:index": "node src/crawl/build-index.js",
+    "search": "node src/localsearch/search.js"
   },
-  "dependencies": {
-    "cheerio": "^1.2.0",
-    "pdf-parse": "^2.4.5"
+  "engines": {
+    "node": ">=18"
   }
 }
