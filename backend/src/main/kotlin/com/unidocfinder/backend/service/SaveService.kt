@@ -27,6 +27,11 @@ class SaveService(private val transactionManager: TransactionManager) {
                 abstract = request.abstract,
                 year = request.year,
                 url = request.url,
+                authors = request.authors,
+                subjects = request.subjects,
+                type = request.type,
+                language = request.language,
+                fileUrl = request.fileUrl,
                 university = university
             )
 

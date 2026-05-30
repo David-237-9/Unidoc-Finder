@@ -23,6 +23,11 @@ class IndexElasticService(
                 abstract = thesis.abstract,
                 year = thesis.year.toString(),
                 url = thesis.url,
+                authors = thesis.authors,
+                subjects = thesis.subjects,
+                type = thesis.type,
+                language = thesis.language,
+                fileUrl = thesis.fileUrl,
                 university = thesis.university.name
             )
             thesisElasticRepository.save(document)
@@ -46,6 +51,11 @@ class IndexElasticService(
                     abstract = thesis.abstract,
                     year = thesis.year.toString(),
                     url = thesis.url,
+                    authors = thesis.authors,
+                    subjects = thesis.subjects,
+                    type = thesis.type,
+                    language = thesis.language,
+                    fileUrl = thesis.fileUrl,
                     university = thesis.university.name
                 )
             }

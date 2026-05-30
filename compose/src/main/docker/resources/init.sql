@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS thesis (
     abstract TEXT,
     year INT,
     url TEXT NOT NULL,
+    authors TEXT[] NOT NULL DEFAULT '{}',
+    subjects TEXT[] NOT NULL DEFAULT '{}',
+    type TEXT NOT NULL,
+    language TEXT NOT NULL,
+    file_url TEXT,
     university_id UUID,
     FOREIGN KEY (university_id) REFERENCES university (id)
 );
