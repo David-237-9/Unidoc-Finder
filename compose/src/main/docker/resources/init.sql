@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS thesis (
 );
 
 INSERT INTO university (name, repo_url) VALUES
+    ('Instituto Politécnico de Lisboa', 'https://repositorio.ipl.pt/server/oai/request'),
+    ('Universidade de Lisboa', 'https://repositorio.ul.pt/server/oai/request'),
     ('Universidade Nova de Lisboa', 'https://run.unl.pt/server/oai/request'),
     ('Universidade do Minho', 'https://repositorium.sdum.uminho.pt/oai/request'),
     ('Universidade do Porto', 'https://repositorio-aberto.up.pt/oai/request'),
