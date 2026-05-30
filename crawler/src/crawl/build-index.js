@@ -20,6 +20,7 @@ const maxDocuments = Number(process.env.MAX_DOCUMENTS || 0)
 const progressEvery = Number(process.env.PROGRESS_EVERY || 5000)
 const maxDescriptionChars = Number(process.env.MAX_DESCRIPTION_CHARS || 2000)
 const outputDir = process.env.INDEX_DIR || "data"
+const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
 const seenDocumentHashes = new Set()
 const documentOffsets = []
 const invertedIndex = Object.create(null)
@@ -40,6 +41,7 @@ async function main() {
     console.log("Building the local thesis/dissertation index.")
     console.log(`Repositories: ${selectedRepositories.map(repository => repository.id).join(", ")}`)
     console.log(`Output: ${documentsPath} + ${indexPath}`)
+    console.log(`API: ${apiUrl}`)
     console.log("The builder now streams documents to disk to avoid Node.js heap exhaustion.")
 
     if (optionalBuildFilter) {
@@ -129,6 +131,8 @@ async function crawlRepository(repository, documentStream, initialOffset) {
             if (isDuplicate(record)) continue
 
             const document = prepareDocument(record)
+            await sendDocumentToApi(document, repository)
+
             const line = JSON.stringify(document) + "\n"
             const lineBytes = Buffer.byteLength(line, "utf8")
 
@@ -178,6 +182,63 @@ function prepareDocument(record) {
         oaiIdentifier: record.oaiIdentifier || null,
         datestamp: record.datestamp || null
     }
+}
+
+/**
+ * Sends one document to the thesis API and waits for the API response.
+ * @param {object} document The compact document stored in the JSONL file.
+ * @param {object} repository The repository configuration.
+ * @returns {Promise<void>} A promise that resolves when the document has been accepted.
+ */
+async function sendDocumentToApi(document, repository) {
+    const payload = createDocumentRequest(document, repository)
+
+    const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+        const responseBody = await response.text().catch(() => "")
+        throw new Error(`Failed to save document "${payload.title}" (${response.status} ${response.statusText}): ${responseBody}`)
+    }
+}
+
+/**
+ * Converts a stored document into the request expected by the thesis API.
+ * @param {object} document The compact document stored in the JSONL file.
+ * @param {object} repository The repository configuration.
+ * @returns {object} The thesis API request body.
+ */
+function createDocumentRequest(document, repository) {
+    if (!repository.id) throw new Error(`Missing universityId for repository ${repository.name}`)
+
+    return {
+        title: document.title || "Untitled",
+        abstract: document.description || "",
+        year: parseYear(document.year),
+        url: document.url || document.fileUrl || "",
+        authors: document.authors || [],
+        subjects: document.subjects || [],
+        type: Array.isArray(document.type) ? document.type.join(", ") : String(document.type || ""),
+        language: document.language || "",
+        fileUrl: document.fileUrl || null,
+        universityId: repository.id
+    }
+}
+
+/**
+ * Converts a parsed year into the integer expected by the thesis API.
+ * @param {string|number|null|undefined} value The parsed year value.
+ * @returns {number} The integer year, or 0 when no year is available.
+ */
+function parseYear(value) {
+    const year = Number.parseInt(value, 10)
+    return Number.isInteger(year) ? year : 0
 }
 
 /**
