@@ -7,9 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "node src/localsearch/search.js",
-    "build:index": "node src/crawl/build-index.js",
-    "search": "node src/localsearch/search.js"
+    "index": "node src/index.js"
   },
   "engines": {
     "node": ">=18"

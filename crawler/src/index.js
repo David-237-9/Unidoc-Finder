@@ -5,7 +5,6 @@ import { createHash } from "node:crypto"
 import { fetchText } from "./fetcher.js"
 import { parseOaiRecords, isThesis, matchesFilter, resultKey } from "./parser.js"
 import { REPOSITORIES } from "./repositories.js"
-import { addDocumentToIndex } from "../localsearch/local-search.js"
 
 if (process.env.ALLOW_INVALID_TLS === "true") {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
@@ -21,104 +20,99 @@ const progressEvery = Number(process.env.PROGRESS_EVERY || 5000)
 const maxDescriptionChars = Number(process.env.MAX_DESCRIPTION_CHARS || 2000)
 const outputDir = process.env.INDEX_DIR || "data"
 const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
+
+// Output destination modes:
+const OUTPUT_DESTINATION_API_ONLY = 1
+const OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY = 2
+const OUTPUT_DESTINATION_BOTH = 3
+const outputDestination = Number(process.env.OUTPUT_DESTINATION || OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY)
+
+validateOutputDestination(outputDestination)
+
+const shouldSendToApi = outputDestination === OUTPUT_DESTINATION_API_ONLY || outputDestination === OUTPUT_DESTINATION_BOTH
+const shouldSaveToDocumentsJsonl = outputDestination === OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY || outputDestination === OUTPUT_DESTINATION_BOTH
 const seenDocumentHashes = new Set()
-const documentOffsets = []
-const invertedIndex = Object.create(null)
-let indexedTermCount = 0
 let documentCount = 0
 
 /**
- * Runs the complete offline indexing process.
- * @returns {Promise<void>} A promise that resolves when the index files are written.
+ * Runs the complete crawl process.
+ * @returns {Promise<void>} A promise that resolves when all selected repositories have been processed.
  */
 async function main() {
     const started = Date.now()
     const documentsPath = path.join(outputDir, "documents.jsonl")
-    const offsetsPath = path.join(outputDir, "documents-offsets.json")
-    const indexPath = path.join(outputDir, "inverted-index.json")
-    const metadataPath = path.join(outputDir, "metadata.json")
 
-    console.log("Building the local thesis/dissertation index.")
+    console.log("Crawling thesis/dissertation records.")
     console.log(`Repositories: ${selectedRepositories.map(repository => repository.id).join(", ")}`)
-    console.log(`Output: ${documentsPath} + ${indexPath}`)
-    console.log(`API: ${apiUrl}`)
-    console.log("The builder now streams documents to disk to avoid Node.js heap exhaustion.")
+    console.log(`Destination mode: ${describeOutputDestination(outputDestination)}`)
+
+    if (shouldSendToApi) console.log(`API: ${apiUrl}`)
+    if (shouldSaveToDocumentsJsonl) {
+        console.log(`Documents JSONL: ${documentsPath}`)
+        console.log("Documents will be streamed to disk to avoid Node.js heap exhaustion.")
+    }
 
     if (optionalBuildFilter) {
         console.log(`Build filter: "${optionalBuildFilter}"`)
-        console.log("Only matching documents will be stored. For a general search engine, build without this filter.")
+        console.log("Only matching documents will be processed.")
     }
 
     console.log("") // ESmpty line for better readability
 
-    await fsp.rm(outputDir, { recursive: true, force: true })
-    await fsp.mkdir(outputDir, { recursive: true })
+    let documentStream = null
 
-    const documentStream = fs.createWriteStream(documentsPath, { encoding: "utf8" })
-    let currentOffset = 0
+    if (shouldSaveToDocumentsJsonl) {
+        await fsp.rm(outputDir, { recursive: true, force: true })
+        await fsp.mkdir(outputDir, { recursive: true })
+        documentStream = fs.createWriteStream(documentsPath, { encoding: "utf8" })
+    }
 
     try {
         for (const repository of selectedRepositories) {
             if (maxDocuments > 0 && documentCount >= maxDocuments) break
-            currentOffset = await crawlRepository(repository, documentStream, currentOffset)
+            await crawlRepository(repository, documentStream)
         }
     } finally {
-        await closeWriteStream(documentStream)
+        if (documentStream) await closeWriteStream(documentStream)
     }
-
-    await writeJsonFile(offsetsPath, documentOffsets, false)
-    await writeJsonObjectFile(indexPath, invertedIndex)
-    await writeJsonFile(metadataPath, {
-        generatedAt: new Date().toISOString(),
-        repositories: selectedRepositories.map(repository => repository.id),
-        optionalBuildFilter: optionalBuildFilter || null,
-        documents: documentCount,
-        terms: indexedTermCount,
-        format: "jsonl-documents-plus-compact-inverted-index",
-        maxDescriptionChars,
-        indexDescriptionChars: Number(process.env.INDEX_DESCRIPTION_CHARS || 600),
-        maxTermsPerDocument: Number(process.env.MAX_TERMS_PER_DOCUMENT || 250)
-    }, true)
 
     const elapsed = ((Date.now() - started) / 1000).toFixed(1)
 
     console.log("\n" + "=".repeat(90))
-    console.log(`Index completed in ${elapsed}s.`)
-    console.log(`Stored documents: ${documentCount}`)
-    console.log(`Indexed terms: ${indexedTermCount}`)
-    console.log(`Files: ${documentsPath}, ${offsetsPath}, ${indexPath}, ${metadataPath}`)
-    console.log("Search locally with: node src/search.js \"artificial intelligence\"")
+    console.log(`Crawl completed in ${elapsed}s.`)
+    console.log(`Processed documents: ${documentCount}`)
+
+    if (shouldSendToApi) console.log(`Sent to API: ${documentCount}`)
+    if (shouldSaveToDocumentsJsonl) console.log(`Saved file: ${documentsPath}`)
 }
 
 /**
- * Crawls one OAI-PMH repository and stores matching thesis records.
+ * Crawls one OAI-PMH repository and processes matching thesis records.
  * @param {object} repository The repository configuration.
  * @param {string} repository.id The repository identifier.
  * @param {string} repository.name The repository display name.
  * @param {string} repository.oaiUrl The repository OAI-PMH endpoint.
- * @param {fs.WriteStream} documentStream The stream where JSONL documents are written.
- * @param {number} initialOffset The current byte offset in the JSONL document file.
- * @returns {Promise<number>} The updated byte offset after processing the repository.
+ * @param {fs.WriteStream|null} documentStream The stream where JSONL documents are written, or null when JSONL output is disabled.
+ * @returns {Promise<void>} A promise that resolves when the repository has been processed.
  */
-async function crawlRepository(repository, documentStream, initialOffset) {
+async function crawlRepository(repository, documentStream) {
     let nextUrl = buildListRecordsUrl(repository.oaiUrl)
     let processed = 0
     let kept = 0
     let page = 1
-    let currentOffset = initialOffset
 
     console.log(`=== ${repository.name} (${repository.id}) ===`)
 
     while (nextUrl) {
-        if (maxDocuments > 0 && documentCount >= maxDocuments) return currentOffset
+        if (maxDocuments > 0 && documentCount >= maxDocuments) return
 
         if (maxRecordsPerRepository > 0 && processed >= maxRecordsPerRepository) {
             console.log(`MAX_RECORDS_PER_REPO reached for ${repository.id}: ${processed}`)
-            return currentOffset
+            return
         }
 
         const xml = await fetchText(nextUrl)
-        if (!xml) return currentOffset
+        if (!xml) return
 
         const { records, resumptionToken } = parseOaiRecords(xml, repository)
 
@@ -131,16 +125,10 @@ async function crawlRepository(repository, documentStream, initialOffset) {
             if (isDuplicate(record)) continue
 
             const document = prepareDocument(record)
-            await sendDocumentToApi(document, repository)
 
-            const line = JSON.stringify(document) + "\n"
-            const lineBytes = Buffer.byteLength(line, "utf8")
+            if (shouldSendToApi) await sendDocumentToApi(document, repository)
+            if (shouldSaveToDocumentsJsonl) await saveDocumentToJsonl(documentStream, document)
 
-            documentOffsets.push(currentOffset)
-            await writeToStream(documentStream, line)
-            indexedTermCount += addDocumentToIndex(invertedIndex, document, documentCount)
-
-            currentOffset += lineBytes
             documentCount++
             kept++
 
@@ -158,7 +146,6 @@ async function crawlRepository(repository, documentStream, initialOffset) {
     }
 
     console.log(`Finished ${repository.id}. Processed: ${processed}; kept: ${kept}; total: ${documentCount}\n`)
-    return currentOffset
 }
 
 /**
@@ -182,6 +169,17 @@ function prepareDocument(record) {
         oaiIdentifier: record.oaiIdentifier || null,
         datestamp: record.datestamp || null
     }
+}
+
+/**
+ * Saves one document to the JSONL output file.
+ * @param {fs.WriteStream|null} documentStream The JSONL output stream.
+ * @param {object} document The compact document to save.
+ * @returns {Promise<void>} A promise that resolves when the document has been written.
+ */
+async function saveDocumentToJsonl(documentStream, document) {
+    if (!documentStream) throw new Error("documents.jsonl output is enabled, but the output stream is not available.")
+    await writeToStream(documentStream, JSON.stringify(document) + "\n")
 }
 
 /**
@@ -242,38 +240,31 @@ function parseYear(value) {
 }
 
 /**
- * Writes a JSON file using the normal serializer.
- * @param {string} filePath The file path to write.
- * @param {unknown} value The value to serialize.
- * @param {boolean} pretty Whether the JSON should be pretty-printed.
- * @returns {Promise<void>} A promise that resolves when the file has been written.
+ * Validates the configured output destination.
+ * @param {number} value The configured output destination value.
+ * @returns {void}
  */
-async function writeJsonFile(filePath, value, pretty) {
-    const json = pretty ? JSON.stringify(value, null, 2) : JSON.stringify(value)
-    await fsp.writeFile(filePath, json, "utf8")
+function validateOutputDestination(value) {
+    const validDestinations = [
+        OUTPUT_DESTINATION_API_ONLY,
+        OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY,
+        OUTPUT_DESTINATION_BOTH
+    ]
+
+    if (!validDestinations.includes(value)) {
+        throw new Error(`Invalid OUTPUT_DESTINATION "${value}". Use 1 for API only, 2 for documents.jsonl only, or 3 for both.`)
+    }
 }
 
 /**
- * Writes a large JSON object through a stream to avoid duplicating it in memory.
- * @param {string} filePath The file path to write.
- * @param {object} object The object to serialize.
- * @returns {Promise<void>} A promise that resolves when the file has been written.
+ * Returns a human-readable label for an output destination.
+ * @param {number} value The configured output destination value.
+ * @returns {string} The output destination label.
  */
-async function writeJsonObjectFile(filePath, object) {
-    const stream = fs.createWriteStream(filePath, { encoding: "utf8" })
-    let first = true
-
-    await writeToStream(stream, "{")
-
-    for (const key in object) {
-        if (!Object.prototype.hasOwnProperty.call(object, key)) continue
-        if (!first) await writeToStream(stream, ",")
-        await writeToStream(stream, JSON.stringify(key) + ":" + JSON.stringify(object[key]))
-        first = false
-    }
-
-    await writeToStream(stream, "}")
-    await closeWriteStream(stream)
+function describeOutputDestination(value) {
+    if (value === OUTPUT_DESTINATION_API_ONLY) return "1 - only send to API"
+    if (value === OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY) return "2 - only save to documents.jsonl"
+    return "3 - send to API and save to documents.jsonl"
 }
 
 /**
