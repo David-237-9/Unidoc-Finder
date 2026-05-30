@@ -11,7 +11,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -25,6 +25,11 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
+                authors = rs.getArray("authors").toStringList(),
+                subjects = rs.getArray("subjects").toStringList(),
+                type = rs.getString("type"),
+                language = rs.getString("language"),
+                fileUrl = rs.getString("file_url"),
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -37,7 +42,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
     override fun findById(id: UUID): Thesis? {
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -50,6 +55,11 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
+                authors = rs.getArray("authors").toStringList(),
+                subjects = rs.getArray("subjects").toStringList(),
+                type = rs.getString("type"),
+                language = rs.getString("language"),
+                fileUrl = rs.getString("file_url"),
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -65,7 +75,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -78,6 +88,11 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
+                authors = rs.getArray("authors").toStringList(),
+                subjects = rs.getArray("subjects").toStringList(),
+                type = rs.getString("type"),
+                language = rs.getString("language"),
+                fileUrl = rs.getString("file_url"),
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -90,17 +105,25 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
     override fun save(entity: Thesis) {
         handle.createUpdate(
             """
-            INSERT INTO thesis (id, title, abstract, year, url, university_id)
-            VALUES (:id::uuid, :title, :abstract, :year, :url, :universityId::uuid)
+            INSERT INTO thesis (id, title, abstract, year, url, authors, subjects, type, language, file_url, university_id)
+            VALUES (:id::uuid, :title, :abstract, :year, :url, :authors, :subjects, :type, :language, :fileUrl, :universityId::uuid)
             ON CONFLICT (id) DO UPDATE SET
                 title = EXCLUDED.title,
                 abstract = EXCLUDED.abstract,
                 year = EXCLUDED.year,
                 url = EXCLUDED.url,
+                authors = EXCLUDED.authors,
+                subjects = EXCLUDED.subjects,
+                type = EXCLUDED.type,
+                language = EXCLUDED.language,
+                file_url = EXCLUDED.file_url,
                 university_id = EXCLUDED.university_id
             """
         ).bind("id", entity.id.toString()).bind("title", entity.title).bind("abstract", entity.abstract)
-            .bind("year", entity.year).bind("url", entity.url).bind("universityId", entity.university.id.toString())
+            .bind("year", entity.year).bind("url", entity.url).bindArray("authors", String::class.java, entity.authors)
+            .bindArray("subjects", String::class.java, entity.subjects).bind("type", entity.type)
+            .bind("language", entity.language).bind("fileUrl", entity.fileUrl)
+            .bind("universityId", entity.university.id.toString())
             .execute()
     }
 
@@ -124,7 +147,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -138,6 +161,11 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 abstract = rs.getString("abstract"),
                 year = rs.getInt("year"),
                 url = rs.getString("url"),
+                authors = rs.getArray("authors").toStringList(),
+                subjects = rs.getArray("subjects").toStringList(),
+                type = rs.getString("type"),
+                language = rs.getString("language"),
+                fileUrl = rs.getString("file_url"),
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -147,4 +175,9 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         }.list()
     }
 
+}
+
+private fun java.sql.Array?.toStringList(): List<String> {
+    val values = this?.array as? Array<*> ?: return emptyList()
+    return values.filterIsInstance<String>()
 }

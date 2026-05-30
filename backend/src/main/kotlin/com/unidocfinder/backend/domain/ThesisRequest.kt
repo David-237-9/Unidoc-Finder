@@ -8,5 +8,10 @@ data class ThesisRequest(
     val abstract: String,
     val year: Int,
     val url: String,
+    val authors: List<String>,
+    val subjects: List<String>,
+    val type: String,
+    val language: String,
+    val fileUrl: String?,
     val universityId: UUID,
 )
