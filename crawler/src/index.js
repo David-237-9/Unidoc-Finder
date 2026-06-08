@@ -6,6 +6,8 @@ import { fetchText } from "./fetcher.js"
 import { parseOaiRecords, isThesis, matchesFilter, resultKey } from "./parser.js"
 import { REPOSITORIES } from "./repositories.js"
 
+applyCliEnvironmentOverrides()
+
 if (process.env.ALLOW_INVALID_TLS === "true") {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
     console.log("WARNING: ALLOW_INVALID_TLS is enabled. TLS certificate errors will be ignored!")
@@ -49,7 +51,6 @@ async function main() {
     if (shouldSendToApi) console.log(`API: ${apiUrl}`)
     if (shouldSaveToDocumentsJsonl) {
         console.log(`Documents JSONL: ${documentsPath}`)
-        console.log("Documents will be streamed to disk to avoid Node.js heap exhaustion.")
     }
 
     if (optionalBuildFilter) {
@@ -396,11 +397,32 @@ function truncateText(value, maxChars) {
 }
 
 /**
+ * Applies KEY=value command-line arguments to process.env.
+ *
+ * This lets commands such as `npm run index OUTPUT_DESTINATION=2` work on Windows,
+ * PowerShell, cmd.exe, macOS, and Linux without requiring shell-specific env syntax.
+ * @returns {void}
+ */
+function applyCliEnvironmentOverrides() {
+    for (const argument of process.argv.slice(2)) {
+        const match = argument.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/)
+        if (!match) continue
+
+        const [, key, value] = match
+        process.env[key] = value
+    }
+}
+
+/**
  * Reads the optional build-time filter from CLI arguments or environment variables.
  * @returns {string} The optional build filter.
  */
 function getOptionalFilter() {
-    const args = process.argv.slice(2).filter(argument => !argument.startsWith("--"))
+    const args = process.argv
+        .slice(2)
+        .filter(argument => !argument.startsWith("--"))
+        .filter(argument => !/^[A-Za-z_][A-Za-z0-9_]*=.*/.test(argument))
+
     return (args.join(" ") || process.env.FILTER || "").trim()
 }
 
