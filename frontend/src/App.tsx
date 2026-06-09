@@ -73,6 +73,7 @@ export default function App() {
                     documents={filteredDocuments}
                     isLoading={isLoading}
                     error={error}
+                    hasSubmittedQuery={submittedQuery.trim().length > 0}
                     page={page}
                     pageSize={PAGE_SIZE}
                     hasNextPage={documents.length === PAGE_SIZE}

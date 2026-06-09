@@ -31,7 +31,7 @@ export function DocumentCard({document}: DocumentCardProps) {
                 </h2>
 
                 {document.authors.length > 0 ? (
-                    <p className={styles.details}>Por {document.authors.join(', ')}</p>
+                    <p className={styles.details}>Por: {document.authors.join(', ')}</p>
                 ) : null}
 
                 <p className={styles.abstract}>{document.abstract}</p>

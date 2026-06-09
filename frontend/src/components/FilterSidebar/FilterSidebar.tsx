@@ -100,7 +100,7 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
                 <div className={styles.fieldWithIcon}>
                     <Globe2 size={15}/>
                     <input
-                        placeholder="Escreve a área e carrega Enter"
+                        placeholder="Escreve a área"
                         onKeyDown={(event) => {
                             if (event.key === 'Enter') {
                                 addSubject(event.currentTarget.value);

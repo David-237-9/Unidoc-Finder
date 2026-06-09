@@ -6,6 +6,7 @@ interface ResultsListProps {
     documents: DocumentRecord[];
     isLoading: boolean;
     error: string | null;
+    hasSubmittedQuery: boolean;
     page: number;
     pageSize: number;
     hasNextPage: boolean;
@@ -17,6 +18,7 @@ export function ResultsList({
                                 documents,
                                 isLoading,
                                 error,
+                                hasSubmittedQuery,
                                 page,
                                 pageSize,
                                 hasNextPage,
@@ -32,7 +34,13 @@ export function ResultsList({
     }
 
     if (documents.length === 0) {
-        return <p className={styles.stateMessage}>Não foram encontrados documentos com os filtros atuais.</p>;
+        return (
+            <p className={styles.stateMessage}>
+                {hasSubmittedQuery
+                    ? 'Não foram encontrados documentos com os filtros atuais.'
+                    : 'Introduza um termo de pesquisa para encontrar documentos.'}
+            </p>
+        );
     }
 
     return (
