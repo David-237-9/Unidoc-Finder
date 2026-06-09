@@ -44,6 +44,13 @@
     text-decoration: underline;
 }
 
+.details {
+    margin: 0 0 8px;
+    color: #555555;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
 .abstract {
     display: -webkit-box;
     max-width: 650px;
@@ -62,6 +69,21 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+}
+
+.fileLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    color: #333333;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.fileLink:hover {
+    text-decoration: underline;
 }
 
 .meta {

@@ -4,15 +4,23 @@ import styles from './SearchBar.module.css';
 
 interface SearchBarProps {
     selectedType: DocumentType | 'All';
+    documentTypes: DocumentType[];
     query: string;
     onTypeChange: (type: DocumentType | 'All') => void;
     onQueryChange: (query: string) => void;
     onSubmit: () => void;
 }
 
-const documentTypes: Array<DocumentType | 'All'> = ['All', 'Thesis'];
+export function SearchBar({
+                              selectedType,
+                              documentTypes,
+                              query,
+                              onTypeChange,
+                              onQueryChange,
+                              onSubmit
+                          }: SearchBarProps) {
+    const options = buildTypeOptions(documentTypes, selectedType);
 
-export function SearchBar({selectedType, query, onTypeChange, onQueryChange, onSubmit}: SearchBarProps) {
     return (
         <form
             className={styles.searchBar}
@@ -22,15 +30,15 @@ export function SearchBar({selectedType, query, onTypeChange, onQueryChange, onS
             }}
         >
             <label className={styles.selectLabel} htmlFor="doc-type">
-                <span>Documentos</span>
+                <span>{formatTypeLabel(selectedType)}</span>
                 <select
                     id="doc-type"
                     value={selectedType}
                     onChange={(event) => onTypeChange(event.target.value as DocumentType | 'All')}
                 >
-                    {documentTypes.map((type) => (
+                    {options.map((type) => (
                         <option key={type} value={type}>
-                            {type === 'All' ? 'Todos' : 'Tese'}
+                            {formatTypeLabel(type)}
                         </option>
                     ))}
                 </select>
@@ -52,4 +60,18 @@ export function SearchBar({selectedType, query, onTypeChange, onQueryChange, onS
             </button>
         </form>
     );
+}
+
+function buildTypeOptions(documentTypes: DocumentType[], selectedType: DocumentType | 'All'): Array<DocumentType | 'All'> {
+    const uniqueTypes = Array.from(new Set(documentTypes.filter(Boolean)));
+
+    if (selectedType !== 'All' && !uniqueTypes.includes(selectedType)) {
+        uniqueTypes.unshift(selectedType);
+    }
+
+    return ['All', ...uniqueTypes];
+}
+
+function formatTypeLabel(type: DocumentType | 'All'): string {
+    return type === 'All' ? 'Todos' : type;
 }

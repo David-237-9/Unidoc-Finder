@@ -1,15 +1,19 @@
-export type DocumentType = 'Thesis';
+export type DocumentType = string;
 
 export interface DocumentRecord {
     id: string;
     title: string;
     abstract: string;
-    year: number;
+    year: number | null;
     url: string;
     type: DocumentType;
     category: string;
     universityName: string;
-    universityRepoUrl: string;
+    universityRepoUrl?: string;
+    authors: string[];
+    subjects: string[];
+    language: string;
+    fileUrl?: string | null;
 }
 
 export interface SearchFilters {
@@ -17,5 +21,13 @@ export interface SearchFilters {
     category: string[];
     subjects: string[];
     author: string;
+    language: string[];
     publicationRange: [number, number] | null;
+}
+
+export interface FilterOptions {
+    categories: string[];
+    subjects: string[];
+    languages: string[];
+    yearRanges: Array<{ label: string; value: [number, number] }>;
 }

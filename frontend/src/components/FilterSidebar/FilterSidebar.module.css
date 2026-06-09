@@ -53,6 +53,38 @@
     gap: 8px;
 }
 
+.hint {
+    margin: 0;
+    color: #8a8a8a;
+    font-size: 0.78rem;
+}
+
+.suggestionList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.suggestion,
+.activeSuggestion {
+    border: 0;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+    cursor: pointer;
+}
+
+.suggestion {
+    background: #e7eef6;
+    color: #596879;
+}
+
+.activeSuggestion {
+    background: #8f86ec;
+    color: #ffffff;
+}
+
 .seeMoreButton {
     width: max-content;
     border: 0;

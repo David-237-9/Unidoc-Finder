@@ -11,24 +11,34 @@ export function useThesisSearch({query, page, size}: {query: string; page: numbe
     useEffect(() => {
         if (!query.trim()) {
             setDocuments([]);
+            setError(null);
             return;
         }
+
+        const controller = new AbortController();
 
         setIsLoading(true);
         setError(null);
 
-        searchThesis({query, page, size})
+        searchThesis({query, page, size}, controller.signal)
             .then((theses) => {
                 setDocuments(theses.map(mapThesisToDocument));
-                setIsLoading(false);
             })
             .catch((err) => {
+                if (err instanceof DOMException && err.name === 'AbortError') {
+                    return;
+                }
+
                 setError(err instanceof Error ? err.message : 'Failed to fetch results');
                 setDocuments([]);
-                setIsLoading(false);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             });
 
-        return () => {};
+        return () => controller.abort();
     }, [query, page, size]);
 
     return {documents, isLoading, error};
