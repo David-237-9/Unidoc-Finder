@@ -12,9 +12,9 @@ sealed class SearchError {
 class SearchService(private val thesisElasticRepository: ThesisElasticRepository) {
     fun search(query: String, page: Int, size: Int): Either<SearchError, List<ThesisDocument>> {
         return try {
-            val searchResult = thesisElasticRepository.searchThesis(query)
-                .drop((page - 1) * size)
-                .take(size)
+            val safePage = page.coerceAtLeast(1)
+            val safeSize = size.coerceIn(1, 100)
+            val searchResult = thesisElasticRepository.searchThesis(query, safePage, safeSize)
 
             Success(searchResult)
         } catch (e: Exception) {
