@@ -12,6 +12,20 @@ function sleep(ms) {
 }
 
 /**
+ * Formats fetch errors with the nested Node.js cause, when available.
+ * @param {unknown} error The thrown fetch error.
+ * @returns {string} A readable error summary.
+ */
+function formatFetchError(error) {
+    return [
+        error?.name,
+        error?.message,
+        error?.cause?.code,
+        error?.cause?.message
+    ].filter(Boolean).join(" | ")
+}
+
+/**
  * Fetches a URL and returns its response body as text.
  * @param {string} url The URL to fetch.
  * @param {object} [options] Optional request settings.
@@ -51,7 +65,7 @@ export async function fetchText(url, options = {}) {
 
             if (attempt < retries) {
                 const waitMs = 1000 * (attempt + 1)
-                console.warn(`Fetch failed (${attempt + 1}/${retries + 1}) for ${url}: ${error.message}. Retrying in ${waitMs}ms.`)
+                console.warn(`Fetch failed (${attempt + 1}/${retries + 1}) for ${url}: ${formatFetchError(error)}. Retrying in ${waitMs}ms.`)
                 await sleep(waitMs)
             }
         } finally {
@@ -59,6 +73,6 @@ export async function fetchText(url, options = {}) {
         }
     }
 
-    console.warn(`Fetch failed permanently for ${url}: ${lastError?.message || "unknown error"}`)
+    console.warn(`Fetch failed permanently for ${url}: ${formatFetchError(lastError) || "unknown error"}`)
     return null
 }

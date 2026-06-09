@@ -97,7 +97,7 @@ async function main() {
  * @returns {Promise<void>} A promise that resolves when the repository has been processed.
  */
 async function crawlRepository(repository, documentStream) {
-    let nextUrl = buildListRecordsUrl(repository.oaiUrl)
+    let nextUrl = buildListRecordsUrl(repository.oaiUrl, repository.metadataPrefix)
     let processed = 0
     let kept = 0
     let page = 1
@@ -115,7 +115,17 @@ async function crawlRepository(repository, documentStream) {
         const xml = await fetchText(nextUrl)
         if (!xml) return
 
-        const { records, resumptionToken } = parseOaiRecords(xml, repository)
+        const { records, resumptionToken, oaiError } = parseOaiRecords(xml, repository)
+
+        if (oaiError) {
+            console.warn(`OAI error for ${repository.id}: ${oaiError.code}${oaiError.message ? ` - ${oaiError.message}` : ""}`)
+            return
+        }
+
+        if (records.length === 0) {
+            console.warn(`No OAI records found for ${repository.id} on page ${page}. Check the endpoint URL and metadataPrefix.`)
+            return
+        }
 
         for (const record of records) {
             processed++
@@ -313,12 +323,13 @@ function delay(ms) {
 /**
  * Builds the initial OAI-PMH ListRecords URL.
  * @param {string} oaiUrl The repository OAI-PMH endpoint.
+ * @param {string} [metadataPrefix] The optional metadata prefix to request (defaults to "oai_dc").
  * @returns {string} The ListRecords URL.
  */
-function buildListRecordsUrl(oaiUrl) {
+function buildListRecordsUrl(oaiUrl, metadataPrefix) {
     const url = new URL(oaiUrl)
     url.searchParams.set("verb", "ListRecords")
-    url.searchParams.set("metadataPrefix", "oai_dc")
+    url.searchParams.set("metadataPrefix", (metadataPrefix) ? metadataPrefix : "oai_dc")
     return url.href
 }
 

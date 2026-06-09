@@ -15,6 +15,7 @@ const STOPWORDS = new Set([
  */
 export function parseOaiRecords(xml, repository) {
     const records = []
+    const oaiError = getOaiError(xml)
 
     for (const recordXml of iterateXmlElements(xml, "record")) {
         if (isDeletedRecord(recordXml)) continue
@@ -59,7 +60,26 @@ export function parseOaiRecords(xml, repository) {
 
     return {
         records,
-        resumptionToken: tokens.length > 0 ? tokens[tokens.length - 1] : null
+        resumptionToken: tokens.length > 0 ? tokens[tokens.length - 1] : null,
+        oaiError
+    }
+}
+
+/**
+ * Extracts an OAI-PMH error from a response, when present.
+ * @param {string} xml The OAI-PMH XML response.
+ * @returns {{code: string, message: string}|null} The OAI error, or null when the response has no OAI error.
+ */
+function getOaiError(xml) {
+    const match = String(xml || "").match(
+        /<(?:[\w.-]+:)?error\b[^>]*\bcode=["']([^"']+)["'][^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?error>/i
+    )
+
+    if (!match) return null
+
+    return {
+        code: match[1],
+        message: cleanText(match[2]) || ""
     }
 }
 
