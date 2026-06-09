@@ -18,6 +18,10 @@ const initialFilters: SearchFilters = {
     publicationRange: null
 };
 
+async function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export default function App() {
     const [selectedType, setSelectedType] = useState<DocumentType | 'All'>('All');
     const [queryInput, setQueryInput] = useState('');
@@ -37,6 +41,10 @@ export default function App() {
         return documents.filter((document) => matchesSearch(document, selectedType, filters));
     }, [selectedType, documents, filters]);
 
+    const scrollToTop = () => {
+        window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
+    };
+
     const handleSearchSubmit = () => {
         setSubmittedQuery(queryInput);
         setPage(1);
@@ -50,6 +58,16 @@ export default function App() {
     const handleFiltersChange = (nextFilters: SearchFilters) => {
         setFilters(nextFilters);
         setPage(1);
+    };
+
+    const handlePreviousPage = () => {
+        setPage((currentPage) => Math.max(1, currentPage - 1));
+        delay(10).then(_ => scrollToTop()); // Delay scrol to avoid bugs
+    };
+
+    const handleNextPage = () => {
+        setPage((currentPage) => currentPage + 1);
+        delay(10).then(_ => scrollToTop()); // Delay scrol to avoid bugs
     };
 
     return (
@@ -77,8 +95,8 @@ export default function App() {
                     page={page}
                     pageSize={PAGE_SIZE}
                     hasNextPage={documents.length === PAGE_SIZE}
-                    onPreviousPage={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
-                    onNextPage={() => setPage((currentPage) => currentPage + 1)}
+                    onPreviousPage={handlePreviousPage}
+                    onNextPage={handleNextPage}
                 />
             </div>
         </main>

@@ -21,9 +21,9 @@ export function DocumentCard({document}: DocumentCardProps) {
             <div className={styles.content}>
                 <h2>
                     {hasResultUrl ? (
-                        <a href={document.url} target="_blank" rel="noreferrer">
-                            {document.title}
-                            <ExternalLink size={15} aria-hidden="true"/>
+                        <a className={styles.titleLink} href={document.url} target="_blank" rel="noreferrer">
+                            <span className={styles.titleText}>{document.title}</span>
+                            <ExternalLink className={styles.externalLinkIcon} size={16} aria-hidden="true"/>
                         </a>
                     ) : (
                         <span>{document.title}</span>
