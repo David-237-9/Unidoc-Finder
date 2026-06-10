@@ -15,11 +15,12 @@ class ThesisElasticRepositoryImpl(
 ) : ThesisElasticRepository {
 
     override fun searchThesis(query: String, page: Int, size: Int): List<ThesisDocument> {
-        if (query.isBlank()) {
+        val normalizedQuery = normalizeSearchQuery(query)
+
+        if (normalizedQuery.isBlank()) {
             return emptyList()
         }
 
-        val wildcardQuery = "*${query.lowercase()}*"
         val searchableFields = listOf(
             "title",
             "abstract",
@@ -29,20 +30,19 @@ class ThesisElasticRepositoryImpl(
             "language",
             "university"
         )
-        val shouldQueries = searchableFields.map { field ->
-            Query.of { q ->
-                q.wildcard { wildcard ->
-                    wildcard.field(field).value(wildcardQuery).caseInsensitive(true)
-                }
-            }
+
+        val terms = extractSearchTerms(normalizedQuery)
+        val requiredTermQueries = terms.map { term ->
+            buildTermQuery(term, searchableFields)
         }
+        val phraseBoostQueries = buildPhraseBoostQueries(normalizedQuery, searchableFields)
 
         val searchQuery = NativeQuery.builder()
             .withQuery(
                 Query.of { q ->
                     q.bool { bool ->
-                        bool.should(shouldQueries)
-                        bool.minimumShouldMatch("1")
+                        bool.must(requiredTermQueries)
+                        bool.should(phraseBoostQueries)
                     }
                 }
             )
@@ -63,5 +63,80 @@ class ThesisElasticRepositoryImpl(
 
     override fun saveAll(entities: List<ThesisDocument>): List<ThesisDocument> {
         return entities.map { elasticsearchOperations.save(it) }
+    }
+
+    private fun buildTermQuery(term: String, fields: List<String>): Query {
+        val wildcardValue = "*${escapeWildcardValue(term.lowercase())}*"
+        val fieldQueries = fields.flatMap { field ->
+            listOf(
+                Query.of { q ->
+                    q.match { match ->
+                        match.field(field).query(term).fuzziness("AUTO")
+                    }
+                },
+                Query.of { q ->
+                    q.wildcard { wildcard ->
+                        wildcard.field(field).value(wildcardValue).caseInsensitive(true)
+                    }
+                }
+            )
+        }
+
+        return Query.of { q ->
+            q.bool { bool ->
+                bool.should(fieldQueries)
+                bool.minimumShouldMatch("1")
+            }
+        }
+    }
+
+    private fun buildPhraseBoostQueries(query: String, fields: List<String>): List<Query> {
+        if (!query.contains(' ')) {
+            return emptyList()
+        }
+
+        return fields.map { field ->
+            Query.of { q ->
+                q.matchPhrase { phrase ->
+                    phrase.field(field).query(query).slop(2)
+                }
+            }
+        }
+    }
+
+    /**
+     * URLSearchParams renders spaces as '+'. Spring usually decodes that back to a
+     * real space before this method is called, but this also fixes requests that
+     * reach the backend as "machine+learning" instead of "machine learning".
+     */
+    private fun normalizeSearchQuery(query: String): String {
+        return query
+            .replace(PLUS_BETWEEN_WORDS, " ")
+            .replace(WHITESPACE, " ")
+            .trim()
+    }
+
+    private fun extractSearchTerms(query: String): List<String> {
+        val terms = WORD.findAll(query)
+            .map { it.value }
+            .filter { it.length > 1 }
+            .map { it.lowercase() }
+            .distinct()
+            .toList()
+
+        return terms.ifEmpty { listOf(query.lowercase()) }
+    }
+
+    private fun escapeWildcardValue(value: String): String {
+        return value
+            .replace("\\", "\\\\")
+            .replace("*", "\\*")
+            .replace("?", "\\?")
+    }
+
+    companion object {
+        private val PLUS_BETWEEN_WORDS = Regex("(?<=[\\p{L}\\p{N}])\\+(?=[\\p{L}\\p{N}])")
+        private val WHITESPACE = Regex("\\s+")
+        private val WORD = Regex("[\\p{L}\\p{N}]+")
     }
 }
