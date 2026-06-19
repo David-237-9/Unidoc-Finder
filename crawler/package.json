@@ -7,9 +7,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "index": "node src/index.js"
+    "index": "node src/index.js",
+    "test": "mocha \"test/**/*.test.js\""
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "mocha": "^11.7.6"
   }
 }
