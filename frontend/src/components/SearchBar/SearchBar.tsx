@@ -1,12 +1,12 @@
 import {Search, Globe2} from 'lucide-react';
-import type {DocumentType} from '../../types/document';
+import type {OptionItem} from '../../types/document';
 import styles from './SearchBar.module.css';
 
 interface SearchBarProps {
-    selectedType: DocumentType | 'All';
-    documentTypes: DocumentType[];
+    selectedType: string | 'All';
+    documentTypes: OptionItem[];
     query: string;
-    onTypeChange: (type: DocumentType | 'All') => void;
+    onTypeChange: (type: string | 'All') => void;
     onQueryChange: (query: string) => void;
     onSubmit: () => void;
 }
@@ -30,16 +30,18 @@ export function SearchBar({
             }}
         >
             <label className={styles.selectLabel} htmlFor="doc-type">
-                <span>{formatTypeLabel(selectedType)}</span>
+                <span>{formatTypeLabel(selectedType, documentTypes)}</span>
                 <select
                     id="doc-type"
                     value={selectedType}
-                    onChange={(event) => onTypeChange(event.target.value as DocumentType | 'All')}
+                    onChange={(event) => onTypeChange(event.target.value as string | 'All')}
                 >
-                    {options.map((type) => (
-                        <option key={type} value={type}>
-                            {formatTypeLabel(type)}
-                        </option>
+                    {options.map((opt) => (
+                        opt === 'All' ? (
+                            <option key="All" value="All">Todos</option>
+                        ) : (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        )
                     ))}
                 </select>
             </label>
@@ -62,16 +64,19 @@ export function SearchBar({
     );
 }
 
-function buildTypeOptions(documentTypes: DocumentType[], selectedType: DocumentType | 'All'): Array<DocumentType | 'All'> {
-    const uniqueTypes = Array.from(new Set(documentTypes.filter(Boolean)));
+function buildTypeOptions(documentTypes: OptionItem[], selectedType: string | 'All'): Array<OptionItem | 'All'> {
+    const uniqueTypes = Array.from(new Map(documentTypes.map(d => [d.value, d])).values());
 
-    if (selectedType !== 'All' && !uniqueTypes.includes(selectedType)) {
-        uniqueTypes.unshift(selectedType);
+    if (selectedType !== 'All' && !uniqueTypes.some(t => t.value === selectedType)) {
+        // if selectedType is not in list add a placeholder option
+        uniqueTypes.unshift({label: selectedType, value: selectedType});
     }
 
     return ['All', ...uniqueTypes];
 }
 
-function formatTypeLabel(type: DocumentType | 'All'): string {
-    return type === 'All' ? 'Todos' : type;
+function formatTypeLabel(type: string | 'All', documentTypes: OptionItem[]): string {
+    if (type === 'All') return 'Todos';
+    const found = documentTypes.find(d => d.value === type);
+    return found ? found.label : type;
 }

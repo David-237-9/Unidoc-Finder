@@ -32,7 +32,7 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
     };
 
     const toggleSubject = (subject: string) => {
-        const cleanSubject = normalizeFilterValue(subject);
+        const cleanSubject = subject.trim();
 
         if (!cleanSubject) {
             return;
@@ -42,7 +42,7 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
     };
 
     const addSubject = (subject: string) => {
-        const cleanSubject = normalizeFilterValue(subject);
+        const cleanSubject = subject.trim();
 
         if (!cleanSubject || filters.subjects.includes(cleanSubject)) {
             return;
@@ -58,11 +58,16 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
             <FilterSection title="Universidade">
                 <div className={styles.fieldWithIcon}>
                     <Globe2 size={15}/>
-                    <input
+                    <select
                         value={filters.university}
-                        placeholder="Escreve a universidade"
                         onChange={(event) => onFiltersChange({...filters, university: event.target.value})}
-                    />
+                        aria-label="Selecionar universidade"
+                    >
+                        <option value="">Todas as universidades</option>
+                        {options.universities.map((university) => (
+                            <option key={university} value={university}>{university}</option>
+                        ))}
+                    </select>
                 </div>
             </FilterSection>
 
@@ -70,13 +75,13 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
                 <div className={styles.checkboxGroup}>
                     {options.categories.length > 0 ? (
                         options.categories.map((category) => (
-                            <label key={category} className={styles.checkboxLabel}>
+                            <label key={category.value} className={styles.checkboxLabel}>
                                 <input
                                     type="checkbox"
-                                    checked={filters.category.includes(category)}
-                                    onChange={() => toggleCategory(category)}
+                                    checked={filters.category.includes(category.value)}
+                                    onChange={() => toggleCategory(category.value)}
                                 />
-                                <span>{category}</span>
+                                <span>{category.label}</span>
                             </label>
                         ))
                     ) : (
@@ -113,16 +118,16 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
                 {options.subjects.length > 0 ? (
                     <div className={styles.suggestionList}>
                         {options.subjects.slice(0, 10).map((subject) => {
-                            const normalizedSubject = normalizeFilterValue(subject);
+                            const isActive = filters.subjects.includes(subject.value);
 
                             return (
                                 <button
-                                    key={subject}
+                                    key={subject.value}
                                     type="button"
-                                    className={filters.subjects.includes(normalizedSubject) ? styles.activeSuggestion : styles.suggestion}
-                                    onClick={() => toggleSubject(subject)}
+                                    className={isActive ? styles.activeSuggestion : styles.suggestion}
+                                    onClick={() => toggleSubject(subject.value)}
                                 >
-                                    {subject}
+                                    {subject.label}
                                 </button>
                             );
                         })}
@@ -130,9 +135,11 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
                 ) : null}
 
                 <div className={styles.tagList}>
-                    {filters.subjects.map((subject) => (
-                        <TagPill key={subject} label={subject} onRemove={() => removeSubject(subject)}/>
-                    ))}
+                    {filters.subjects.map((subjectValue) => {
+                        const found = options.subjects.find((s) => s.value === subjectValue);
+                        const label = found ? found.label : subjectValue;
+                        return <TagPill key={subjectValue} label={label} onRemove={() => removeSubject(subjectValue)}/>;
+                    })}
                 </div>
             </FilterSection>
 
@@ -184,6 +191,4 @@ function toggleValue(values: string[], value: string): string[] {
     return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }
 
-function normalizeFilterValue(value: string): string {
-    return value.trim().toLowerCase();
-}
+

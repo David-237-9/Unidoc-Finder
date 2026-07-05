@@ -39,8 +39,8 @@ export function DocumentCard({document}: DocumentCardProps) {
                 <div className={styles.tags}>
                     {document.language && document.language !== 'Unknown' ? <TagPill label={document.language}/> : null}
                     {document.year ? <TagPill label={`${document.year}`}/> : null}
-                    {subjectTags.map((subject) => (
-                        <TagPill key={subject} label={subject}/>
+                    {subjectTags.map((subject, idx) => (
+                        <TagPill key={`${String(subject)}-${idx}`} label={String(subject)}/>
                     ))}
                 </div>
 

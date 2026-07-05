@@ -24,9 +24,15 @@ class SearchController(
     fun search(
         @RequestParam(value = "query", required = true) query: String,
         @RequestParam(defaultValue = "1") page: Int,
-        @RequestParam(defaultValue = "10") size: Int
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(required = false) university: String? = null,
+        @RequestParam(required = false) type: String? = null,
+        @RequestParam(required = false) author: String? = null,
+        @RequestParam(required = false) subject: String? = null,
+        @RequestParam(required = false) language: String? = null,
+        @RequestParam(required = false) year: String? = null
     ): ResponseEntity<*> {
-        return when (val result = searchService.search(query, page, size)) {
+        return when (val result = searchService.search(query, page, size, university, type, author, subject, language, year)) {
             is Success -> ResponseEntity.ok(result.value)
             is Failure -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("An error occurred while processing the search")

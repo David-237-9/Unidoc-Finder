@@ -59,7 +59,7 @@ class SearchServiceTest {
             )
         )
 
-        whenever(thesisElasticRepository.searchThesis(query, page, size)).thenReturn(thesisDocuments)
+        whenever(thesisElasticRepository.searchThesis(query, page, size, null, null, null, null, null, null)).thenReturn(thesisDocuments)
 
         val result = searchService.search(query, page, size)
 
@@ -73,7 +73,7 @@ class SearchServiceTest {
         val page = 1
         val size = 10
 
-        whenever(thesisElasticRepository.searchThesis(query, page, size)).thenReturn(emptyList())
+        whenever(thesisElasticRepository.searchThesis(query, page, size, null, null, null, null, null, null)).thenReturn(emptyList())
 
         val result = searchService.search(query, page, size)
 
@@ -91,7 +91,8 @@ class SearchServiceTest {
             thesisElasticRepository.searchThesis(
                 query,
                 page,
-                size
+                size,
+                null, null, null, null, null, null
             )
         ).thenThrow(RuntimeException("Connection failed"))
 
@@ -108,7 +109,7 @@ class SearchServiceTest {
         val size = 10
         val thesisDocuments = emptyList<ThesisDocument>()
 
-        whenever(thesisElasticRepository.searchThesis(query, 1, size)).thenReturn(thesisDocuments)
+        whenever(thesisElasticRepository.searchThesis(query, 1, size, null, null, null, null, null, null)).thenReturn(thesisDocuments)
 
         val result = searchService.search(query, page, size)
 
@@ -122,7 +123,7 @@ class SearchServiceTest {
         val size = 150
         val thesisDocuments = emptyList<ThesisDocument>()
 
-        whenever(thesisElasticRepository.searchThesis(query, page, 100)).thenReturn(thesisDocuments)
+        whenever(thesisElasticRepository.searchThesis(query, page, 100, null, null, null, null, null, null)).thenReturn(thesisDocuments)
 
         val result = searchService.search(query, page, size)
 
@@ -136,7 +137,7 @@ class SearchServiceTest {
         val size = 0
         val thesisDocuments = emptyList<ThesisDocument>()
 
-        whenever(thesisElasticRepository.searchThesis(query, page, 1)).thenReturn(thesisDocuments)
+        whenever(thesisElasticRepository.searchThesis(query, page, 1, null, null, null, null, null, null)).thenReturn(thesisDocuments)
 
         val result = searchService.search(query, page, size)
 

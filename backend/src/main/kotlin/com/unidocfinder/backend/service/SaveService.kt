@@ -15,6 +15,14 @@ class SaveService(private val transactionManager: TransactionManager) {
         }
     }
 
+    fun listUniversities(page: Int = 1, size: Int = 100): List<University> {
+        return transactionManager.run {
+            val safePage = page.coerceAtLeast(1)
+            val safeSize = size.coerceIn(1, 1000)
+            universityRepository.findAll(safePage, safeSize)
+        }
+    }
+
     fun saveThesis(request: ThesisRequest): Thesis {
         return transactionManager.run {
             // Get the existing university by ID

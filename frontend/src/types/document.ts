@@ -25,9 +25,15 @@ export interface SearchFilters {
     publicationRange: [number, number] | null;
 }
 
+export interface OptionItem {
+    label: string;
+    value: string;
+}
+
 export interface FilterOptions {
-    categories: string[];
-    subjects: string[];
+    categories: OptionItem[];
+    subjects: OptionItem[];
     languages: string[];
     yearRanges: Array<{ label: string; value: [number, number] }>;
+    universities: string[];
 }

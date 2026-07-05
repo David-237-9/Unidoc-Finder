@@ -10,11 +10,21 @@ sealed class SearchError {
 
 @Named
 class SearchService(private val thesisElasticRepository: ThesisElasticRepository) {
-    fun search(query: String, page: Int, size: Int): Either<SearchError, List<ThesisDocument>> {
+    fun search(
+        query: String,
+        page: Int,
+        size: Int,
+        university: String? = null,
+        type: String? = null,
+        author: String? = null,
+        subject: String? = null,
+        language: String? = null,
+        year: String? = null
+    ): Either<SearchError, List<ThesisDocument>> {
         return try {
             val safePage = page.coerceAtLeast(1)
             val safeSize = size.coerceIn(1, 100)
-            val searchResult = thesisElasticRepository.searchThesis(query, safePage, safeSize)
+            val searchResult = thesisElasticRepository.searchThesis(query, safePage, safeSize, university, type, author, subject, language, year)
 
             Success(searchResult)
         } catch (e: Exception) {

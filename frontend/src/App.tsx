@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {useMemo, useState, useEffect} from 'react';
 import {Header} from './components/Header/Header';
 import {SearchBar} from './components/SearchBar/SearchBar';
 import {FilterSidebar} from './components/FilterSidebar/FilterSidebar';
@@ -6,6 +6,34 @@ import {ResultsList} from './components/ResultsList/ResultsList';
 import {useThesisSearch} from './hooks/useThesisSearch';
 import type {DocumentRecord, DocumentType, FilterOptions, SearchFilters} from './types/document';
 import './styles.css';
+
+const SUBJECTS_PT = [
+    { label: "Ciência da Computação", value: "computer_science" },
+    { label: "Engenharia Informática", value: "computer_engineering" },
+    { label: "Matemática", value: "mathematics" },
+    { label: "Física", value: "physics" },
+    { label: "Química", value: "chemistry" },
+    { label: "Biologia", value: "biology" },
+    { label: "Engenharia Civil", value: "civil_engineering" },
+    { label: "Engenharia Eletrotécnica", value: "electrical_engineering" },
+    { label: "Economia", value: "economics" },
+    { label: "Gestão", value: "management" },
+    { label: "Psicologia", value: "psychology" },
+    { label: "Sociologia", value: "sociology" },
+    { label: "Direito", value: "law" },
+    { label: "Medicina", value: "medicine" },
+    { label: "Arquitectura", value: "architecture" },
+    { label: "Engenharia Mecânica", value: "mechanical_engineering" },
+    { label: "Ciências da Educação", value: "education_sciences" },
+    { label: "Bioquímica", value: "biochemistry" },
+    { label: "Engenharia Química", value: "chemical_engineering" },
+    { label: "Geografia", value: "geography" }
+];
+
+const TYPES_PT = [
+    { label: "Mestrado", value: "master thesis" },
+    { label: "Doutoramento", value: "doctoral thesis" }
+];
 
 const PAGE_SIZE = 10;
 
@@ -28,14 +56,38 @@ export default function App() {
     const [submittedQuery, setSubmittedQuery] = useState('');
     const [filters, setFilters] = useState<SearchFilters>(initialFilters);
     const [page, setPage] = useState(1);
+    const [universitiesList, setUniversitiesList] = useState<string[]>([]);
 
     const {documents, isLoading, error} = useThesisSearch({
         query: submittedQuery,
         page,
-        size: PAGE_SIZE
+        size: PAGE_SIZE,
+        filters
     });
 
-    const filterOptions = useMemo(() => buildFilterOptions(documents), [documents]);
+    // Fetch universities from backend
+    useEffect(() => {
+        let mounted = true;
+        fetch(`/api/universities?page=1&size=200`)
+            .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed to load'))) 
+            .then((data: any[]) => {
+                if (!mounted) return;
+                const names = data.map((u) => u.name).filter(Boolean);
+                setUniversitiesList(Array.from(new Set(names)).sort((a,b) => a.localeCompare(b)));
+            })
+            .catch(() => {
+                // ignore, keep empty list
+            });
+        return () => { mounted = false; };
+    }, []);
+
+    const filterOptions = useMemo(() => ({
+        categories: TYPES_PT,
+        subjects: SUBJECTS_PT,
+        languages: uniqueSorted(documents.map((document) => document.language).filter(isMeaningfulValue)),
+        yearRanges: buildYearRanges(documents),
+        universities: universitiesList
+    }), [documents, universitiesList]);
 
     const filteredDocuments = useMemo(() => {
         return documents.filter((document) => matchesSearch(document, selectedType, filters));
@@ -145,11 +197,14 @@ function matchesSearch(
 }
 
 function buildFilterOptions(documents: DocumentRecord[]): FilterOptions {
+    const categories = uniqueSorted(documents.map((document) => document.type).filter(isMeaningfulValue));
+    const subjects = uniqueSorted(documents.flatMap((document) => document.subjects).filter(isMeaningfulValue));
     return {
-        categories: uniqueSorted(documents.map((document) => document.type).filter(isMeaningfulValue)),
-        subjects: uniqueSorted(documents.flatMap((document) => document.subjects).filter(isMeaningfulValue)),
+        categories: categories.map(c => ({label: c, value: c})),
+        subjects: subjects.map(s => ({label: s, value: s})),
         languages: uniqueSorted(documents.map((document) => document.language).filter(isMeaningfulValue)),
-        yearRanges: buildYearRanges(documents)
+        yearRanges: buildYearRanges(documents),
+        universities: []
     };
 }
 

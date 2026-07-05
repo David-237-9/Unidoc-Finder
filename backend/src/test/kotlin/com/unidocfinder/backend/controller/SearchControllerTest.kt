@@ -45,7 +45,7 @@ class SearchControllerTest {
             )
         )
 
-        whenever(searchService.search("Thesis", 1, 10)).thenReturn(Success(thesisDocuments))
+        whenever(searchService.search("Thesis", 1, 10, null, null, null, null, null, null)).thenReturn(Success(thesisDocuments))
 
         val response = searchController.search("Thesis", 1, 10)
 
@@ -54,7 +54,7 @@ class SearchControllerTest {
 
     @Test
     fun `search returns INTERNAL_SERVER_ERROR when service fails`() {
-        whenever(searchService.search("invalid", 1, 10)).thenReturn(Failure(SearchError.SearchNotFound))
+        whenever(searchService.search("invalid", 1, 10, null, null, null, null, null, null)).thenReturn(Failure(SearchError.SearchNotFound))
 
         val response = searchController.search("invalid", 1, 10)
 
@@ -64,7 +64,7 @@ class SearchControllerTest {
     @Test
     fun `search uses default pagination values`() {
         val thesis = emptyList<ThesisDocument>()
-        whenever(searchService.search("test", 1, 10)).thenReturn(Success(thesis))
+        whenever(searchService.search("test", 1, 10, null, null, null, null, null, null)).thenReturn(Success(thesis))
 
         val response = searchController.search("test", 1, 10)
 
