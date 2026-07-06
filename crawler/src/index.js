@@ -92,12 +92,12 @@ async function main() {
  * @param {object} repository The repository configuration.
  * @param {string} repository.id The repository identifier.
  * @param {string} repository.name The repository display name.
- * @param {string} repository.oaiUrl The repository OAI-PMH endpoint.
+ * @param {string} repository.repoUrl The repository OAI-PMH endpoint.
  * @param {fs.WriteStream|null} documentStream The stream where JSONL documents are written, or null when JSONL output is disabled.
  * @returns {Promise<void>} A promise that resolves when the repository has been processed.
  */
 async function crawlRepository(repository, documentStream) {
-    let nextUrl = buildListRecordsUrl(repository.oaiUrl, repository.metadataPrefix)
+    let nextUrl = buildListRecordsUrl(repository.repoUrl)
     let processed = 0
     let kept = 0
     let page = 1
@@ -150,7 +150,7 @@ async function crawlRepository(repository, documentStream) {
             printProgress(page, processed, kept)
         }
 
-        nextUrl = resumptionToken ? buildResumptionUrl(repository.oaiUrl, resumptionToken) : null
+        nextUrl = resumptionToken ? buildResumptionUrl(repository.repoUrl, resumptionToken) : null
         page++
 
         if (nextUrl && crawlDelayMs > 0) await delay(crawlDelayMs)
@@ -322,25 +322,24 @@ function delay(ms) {
 
 /**
  * Builds the initial OAI-PMH ListRecords URL.
- * @param {string} oaiUrl The repository OAI-PMH endpoint.
- * @param {string} [metadataPrefix] The optional metadata prefix to request (defaults to "oai_dc").
+ * @param {string} repoUrl The repository OAI-PMH endpoint.
  * @returns {string} The ListRecords URL.
  */
-function buildListRecordsUrl(oaiUrl, metadataPrefix) {
-    const url = new URL(oaiUrl)
+function buildListRecordsUrl(repoUrl) {
+    const url = new URL(repoUrl)
     url.searchParams.set("verb", "ListRecords")
-    url.searchParams.set("metadataPrefix", (metadataPrefix) ? metadataPrefix : "oai_dc")
+    url.searchParams.set("metadataPrefix", (repoUrl.endsWith("/openaire4")) ? "oai_openaire" : "oai_dc")
     return url.href
 }
 
 /**
  * Builds an OAI-PMH ListRecords URL from a resumption token.
- * @param {string} oaiUrl The repository OAI-PMH endpoint.
+ * @param {string} repoUrl The repository OAI-PMH endpoint.
  * @param {string} token The OAI-PMH resumption token.
  * @returns {string} The ListRecords URL for the next page.
  */
-function buildResumptionUrl(oaiUrl, token) {
-    const url = new URL(oaiUrl)
+function buildResumptionUrl(repoUrl, token) {
+    const url = new URL(repoUrl)
     url.searchParams.set("verb", "ListRecords")
     url.searchParams.set("resumptionToken", token)
     return url.href
