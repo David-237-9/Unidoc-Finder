@@ -64,3 +64,12 @@ val buildDockerImage by tasks.registering(Exec::class) {
 tasks.named("assemble") {
     finalizedBy(buildDockerImage)
 }
+
+tasks.register<org.springframework.boot.gradle.tasks.run.BootRun>("benchmarkSearch") {
+    group = "benchmark"
+    description = "Runs a PostgreSQL vs Elasticsearch search benchmark"
+    mainClass.set("com.unidocfinder.backend.BackendApplicationKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    systemProperty("spring.profiles.active", "benchmark")
+    systemProperty("spring.main.web-application-type", "none")
+}

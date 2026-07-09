@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS thesis (
     language TEXT NOT NULL,
     file_url TEXT,
     university_id UUID,
-    FOREIGN KEY (university_id) REFERENCES university (id)
+    FOREIGN KEY (university_id) REFERENCES university (id) ON DELETE CASCADE
 );
 
 INSERT INTO university (name, repo_url) VALUES
