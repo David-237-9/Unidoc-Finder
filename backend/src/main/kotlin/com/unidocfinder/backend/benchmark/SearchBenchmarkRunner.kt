@@ -4,7 +4,6 @@ import com.unidocfinder.backend.domain.Thesis
 import com.unidocfinder.backend.domain.ThesisDocument
 import com.unidocfinder.backend.domain.University
 import com.unidocfinder.backend.repository.ThesisElasticRepository
-import com.unidocfinder.backend.repository.TransactionManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
@@ -21,7 +20,6 @@ import kotlin.system.measureNanoTime
 @Component
 @Profile("benchmark")
 class SearchBenchmarkRunner(
-    private val transactionManager: TransactionManager,
     private val thesisElasticRepository: ThesisElasticRepository,
     private val elasticsearchOperations: ElasticsearchOperations,
     private val applicationContext: ConfigurableApplicationContext,
@@ -31,17 +29,13 @@ class SearchBenchmarkRunner(
     @Value("\${benchmark.size:10}") private val size: Int,
     @Value("\${benchmark.warmup:10}") private val warmup: Int,
     @Value("\${benchmark.iterations:100}") private val iterations: Int,
-    @Value("\${benchmark.seed:true}") private val seed: Boolean,
     @Value("\${benchmark.index:true}") private val index: Boolean,
     @Value("\${benchmark.cleanup:true}") private val cleanup: Boolean,
 ) : CommandLineRunner {
     private val logger = LoggerFactory.getLogger(SearchBenchmarkRunner::class.java)
 
     /**
-     * Runs the benchmark comparing PostgreSQL and Elasticsearch search performance.
-     * It seeds the database and Elasticsearch with a benchmark dataset, performs warmup iterations,
-     * measures the execution time of search queries, and prints a report with the results.
-     * Finally, it cleans up the benchmark data if specified.
+     * Runs the benchmark.
      */
     override fun run(vararg args: String) {
         val benchmarkUniversity = getBenchmarkUniversity()
@@ -54,57 +48,33 @@ class SearchBenchmarkRunner(
             require(warmup >= 0) { "benchmark.warmup cannot be negative" }
             require(iterations > 0) { "benchmark.iterations must be greater than 0" }
 
-            if (cleanup) {
-                deleteBenchmarkData(benchmarkUniversity, benchmarkTheses)
-            }
+            if (cleanup) deleteBenchmarkData(benchmarkTheses)
 
-            if (seed) {
-                seedPostgres(benchmarkUniversity, benchmarkTheses)
-            } else {
-                logger.info("Skipping PostgreSQL seed because benchmark.seed=false")
-            }
+            if (index) indexElasticsearch(benchmarkTheses)
+            else logger.info("Skipping Elasticsearch indexing because benchmark.index=false")
 
-            if (index) {
-                indexElasticsearch(benchmarkTheses)
-            } else {
-                logger.info("Skipping Elasticsearch indexing because benchmark.index=false")
-            }
-
-            val postgresResultCount = postgresSearch().size
             val elasticResultCount = elasticSearch().size
 
             repeat(warmup) {
-                postgresSearch()
                 elasticSearch()
             }
 
-            val postgresTimes = runBenchmark(iterations) { postgresSearch() }
             val elasticTimes = runBenchmark(iterations) { elasticSearch() }
 
-            printReport(
-                postgresResultCount = postgresResultCount,
-                elasticResultCount = elasticResultCount,
-                postgresStats = postgresTimes.toStats(),
-                elasticStats = elasticTimes.toStats(),
-            )
+            printReport(elasticResultCount = elasticResultCount, elasticStats = elasticTimes.toStats(),)
         } finally {
-            if (cleanup) {
-                deleteBenchmarkData(benchmarkUniversity, benchmarkTheses)
-            } else {
-                logger.info("Skipping benchmark cleanup because benchmark.cleanup=false")
-            }
+            if (cleanup) deleteBenchmarkData(benchmarkTheses)
+            else logger.info("Skipping benchmark cleanup because benchmark.cleanup=false")
             SpringApplication.exit(applicationContext)
         }
     }
 
     /**
-     * Deletes the benchmark data from both PostgreSQL and Elasticsearch.
-     * @param university The benchmark university to delete.
+     * Deletes the benchmark data.
      * @param theses The list of benchmark theses to delete.
      */
-    private fun deleteBenchmarkData(university: University, theses: List<Thesis>) {
+    private fun deleteBenchmarkData(theses: List<Thesis>) {
         deleteBenchmarkThesesFromElasticsearch(theses)
-        deleteBenchmarkUniversity(university)
     }
 
     /**
@@ -126,30 +96,6 @@ class SearchBenchmarkRunner(
     }
 
     /**
-     * Deletes the benchmark university from PostgreSQL.
-     * @param university The benchmark university to delete.
-     */
-    private fun deleteBenchmarkUniversity(university: University) {
-        logger.info("Deleting benchmark university {} from PostgreSQL", university.id)
-        transactionManager.run {
-            universityRepository.deleteById(university.id)
-        }
-    }
-
-    /**
-     * Seeds the benchmark university and theses into PostgreSQL.
-     * @param university The benchmark university to seed.
-     * @param theses The list of benchmark theses to seed.
-     */
-    private fun seedPostgres(university: University, theses: List<Thesis>) {
-        logger.info("Seeding {} benchmark theses in PostgreSQL", theses.size)
-        transactionManager.run {
-            universityRepository.save(university)
-            theses.forEach { searchRepository.save(it) }
-        }
-    }
-
-    /**
      * Indexes the benchmark theses into Elasticsearch.
      * @param theses The list of benchmark theses to index.
      */
@@ -158,14 +104,6 @@ class SearchBenchmarkRunner(
         val documents = theses.map { it.toDocument() }
         thesisElasticRepository.saveAll(documents)
         elasticsearchOperations.indexOps(ThesisDocument::class.java).refresh()
-    }
-
-    /**
-     * Performs a search query in PostgreSQL and returns the list of matching theses.
-     * @return A list of matching theses from PostgreSQL.
-     */
-    private fun postgresSearch(): List<Thesis> = transactionManager.run {
-        searchRepository.search(query, page, size)
     }
 
     /**
@@ -198,17 +136,11 @@ class SearchBenchmarkRunner(
     }
 
     /**
-     * Prints a report comparing the search performance of PostgreSQL and Elasticsearch, including average latency, percentiles, and the winner based on average latency.
-     * @param postgresResultCount The number of results returned by PostgreSQL.
+     * Prints a report for Elasticsearch, including average latency and percentiles.
      * @param elasticResultCount The number of results returned by Elasticsearch.
-     * @param postgresStats The statistics for PostgreSQL search performance.
      * @param elasticStats The statistics for Elasticsearch search performance.
      */
-    private fun printReport(postgresResultCount: Int, elasticResultCount: Int, postgresStats: Stats, elasticStats: Stats) {
-        val speedup = postgresStats.averageMs / elasticStats.averageMs
-        val faster = if (speedup >= 1.0) "Elasticsearch" else "PostgreSQL"
-        val multiplier = if (speedup >= 1.0) speedup else 1 / speedup
-
+    private fun printReport(elasticResultCount: Int, elasticStats: Stats) {
         println()
         println("================ Search benchmark ================")
         println("Query: '$query'")
@@ -216,14 +148,10 @@ class SearchBenchmarkRunner(
         println("Page/size: $page/$size")
         println("Warmup iterations: $warmup")
         println("Measured iterations: $iterations")
-        println("PostgreSQL results returned: $postgresResultCount")
         println("Elasticsearch results returned: $elasticResultCount")
         println()
-        println("Engine            avg ms    p50 ms    p95 ms    min ms    max ms")
-        println("PostgreSQL      ${postgresStats.format()}")
-        println("Elasticsearch   ${elasticStats.format()}")
-        println()
-        println("Winner by average latency: $faster (${multiplier.format(2)}x)")
+        println("  avg ms    p50 ms    p95 ms    min ms    max ms")
+        println(elasticStats.format())
         println("==================================================")
         println()
     }

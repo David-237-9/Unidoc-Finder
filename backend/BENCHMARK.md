@@ -1,15 +1,15 @@
 # Search benchmark
 
-Este benchmark compara a latência da mesma pesquisa no PostgreSQL e no Elasticsearch.
+Este benchmark mede a latência de pesquisa no Elasticsearch.
 
-O runner (SearchBenchmarkRunner) usa o profile `benchmark`, cria dados de teste, guarda-os no base de dados e indexa-os no Elasticsearch. Depois executa warmup e medições reais, imprimindo média, p50 (mediana), p95 (percentil 95), mínimo e máximo em milissegundos.
+O runner (`SearchBenchmarkRunner`) usa o profile `benchmark`, cria dados de teste em memória, indexa-os no Elasticsearch e depois executa warmup e medições reais, imprimindo média, p50 (mediana), p95 (percentil 95), mínimo e máximo em milissegundos.
 
 ## Pré-requisitos
 
-Arrancar os serviços de PostgreSQL e Elasticsearch:
+Arrancar o Elasticsearch:
 
 ```bash
-docker-compose -f compose/build/docker-compose-runner-local.yml up -d   
+docker-compose -f compose/build/docker-compose-runner-local.yml up -d
 ```
 
 ## Executar
@@ -36,28 +36,27 @@ Podes alterar os parâmetros com `--args`:
 
 Parâmetros disponíveis:
 
-| Parâmetro | Default | Descrição                                                                                                                                     |
-| --- | ---: |-----------------------------------------------------------------------------------------------------------------------------------------------|
-| `benchmark.query` | `sustainable development` | Texto pesquisado nos dois motores                                                                                                             |
-| `benchmark.rows` | `5000` | Número de teses sintéticas criadas/indexadas                                                                                                  |
-| `benchmark.page` | `1` | Página pedida na pesquisa                                                                                                                     |
-| `benchmark.size` | `10` | Tamanho da página pedida                                                                                                                      |
-| `benchmark.warmup` | `10` | Iterações descartadas antes da medição                                                                                                        |
-| `benchmark.iterations` | `100` | Iterações medidas                                                                                                                             |
-| `benchmark.seed` | `true` | Se deve inserir/atualizar dados no PostgreSQL                                                                                                 |
-| `benchmark.index` | `true` | Se deve indexar dados no Elasticsearch                                                                                                        |
-| `benchmark.cleanup` | `true` | Se deve apagar dados antigos antes da execução e limpar no fim; as teses PostgreSQL são removidas por cascade ao apagar a universidade criada |
+| Parâmetro              |                   Default | Descrição                                                                        |
+| ---------------------- | ------------------------: | -------------------------------------------------------------------------------- |
+| `benchmark.query`      | `sustainable development` | Texto pesquisado no Elasticsearch                                                |
+| `benchmark.rows`       |                    `5000` | Número de teses sintéticas criadas em memória e indexadas                        |
+| `benchmark.page`       |                       `1` | Página pedida na pesquisa                                                        |
+| `benchmark.size`       |                      `10` | Tamanho da página pedida                                                         |
+| `benchmark.warmup`     |                      `10` | Iterações descartadas antes da medição                                           |
+| `benchmark.iterations` |                     `100` | Iterações medidas                                                                |
+| `benchmark.index`      |                    `true` | Se deve indexar dados no Elasticsearch antes da medição                          |
+| `benchmark.cleanup`    |                    `true` | Se deve apagar documentos antigos do benchmark antes da execução e limpar no fim |
 
 ## Notas importantes
 
-- O benchmark usa UUIDs determinísticos, por isso execuções repetidas não criam dados duplicados.
-- A comparação é de latência da aplicação, não um benchmark puro do engine.
-- Para resultados mais estáveis, corre o benchmark mais do que uma vez e ignora a primeira execução, porque Elasticsearch/JVM/DB podem ainda estar frios.
-- O SQL atual do backend usa `ILIKE '%query%'` em `title` e `abstract`. Sem índice trigram/full-text no PostgreSQL, esta abordagem tende a fazer sequential scan em datasets maiores.
+* O benchmark usa UUIDs determinísticos, por isso execuções repetidas não criam documentos duplicados no Elasticsearch.
+* Os dados sintéticos são criados em memória e indexados diretamente no Elasticsearch.
+* O benchmark não insere dados no PostgreSQL.
+* A medição é feita ao nível da aplicação, através do repositório Elasticsearch usado pelo backend.
+* Para resultados mais estáveis, corra o benchmark mais do que uma vez e ignore a primeira execução, porque Elasticsearch e JVM podem ainda estar "frios".
 
 ## Cleanup
 
-O runner apaga os dados de benchmarks antigos antes da execução e limpa também no fim.
-No PostgreSQL, apaga a universidade benchmark com `universityRepository.deleteById(...)`.
-As teses associadas são apagadas automaticamente, pois a foreign key `thesis.university_id` tem `ON DELETE CASCADE`.
+O runner apaga documentos antigos do benchmark antes da execução e limpa também no fim, se `benchmark.cleanup=true`.
+
 No Elasticsearch, os documentos benchmark são apagados explicitamente pelo ID determinístico de cada tese.
