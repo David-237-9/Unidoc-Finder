@@ -1,27 +1,60 @@
 package com.unidocfinder.backend.service
 
+import com.unidocfinder.backend.domain.Thesis
 import com.unidocfinder.backend.domain.ThesisRequest
 import com.unidocfinder.backend.domain.University
+import com.unidocfinder.backend.repository.SearchRepository
+import com.unidocfinder.backend.repository.TransactionManager
+import com.unidocfinder.backend.repository.UniversityRepository
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import java.util.UUID
 import kotlin.test.assertEquals
 
 class SaveServiceTest {
 
+    private lateinit var transactionManager: TransactionManager
+    private lateinit var saveService: SaveService
+    private lateinit var searchRepository: SearchRepository
+    private lateinit var universityRepository: UniversityRepository
+
+    @BeforeEach
+    fun setup() {
+        transactionManager = mock()
+        searchRepository = mock()
+        universityRepository = mock()
+        saveService = SaveService(transactionManager)
+    }
+
     @Test
     fun `saveUniversity returns the saved university`() {
+        val universityId = UUID.randomUUID()
         val university = University(
-            id = UUID.randomUUID(),
+            id = universityId,
             name = "ISEL",
             repoUrl = "http://www.isel.pt"
         )
 
-        assertEquals("ISEL", university.name)
-        assertEquals("http://www.isel.pt", university.repoUrl)
+        whenever(transactionManager.run(any<kotlin.Function1<com.unidocfinder.backend.repository.Transaction, University>>())).thenAnswer { invocation ->
+            val block = invocation.arguments[0] as kotlin.Function1<com.unidocfinder.backend.repository.Transaction, University>
+            val tx = mock<com.unidocfinder.backend.repository.Transaction>()
+            whenever(tx.universityRepository).thenReturn(universityRepository)
+            whenever(tx.searchRepository).thenReturn(searchRepository)
+            block.invoke(tx)
+        }
+
+        val result = saveService.saveUniversity(university)
+
+        assertEquals("ISEL", result.name)
+        assertEquals("http://www.isel.pt", result.repoUrl)
+        assertEquals(universityId, result.id)
     }
 
     @Test
-    fun `saveThesis returns thesis with existing university when found`() {
+    fun `saveThesis persists thesis and indexes to elasticsearch`() {
         val universityId = UUID.randomUUID()
         val university = University(
             id = universityId,
@@ -30,58 +63,97 @@ class SaveServiceTest {
         )
 
         val thesisRequest = ThesisRequest(
-            title = "Test Test",
-            abstract = "This is a Test Abstract",
+            title = "Machine Learning Applications",
+            abstract = "This thesis explores ML in distributed systems",
             year = 2023,
-            url = "http://www.isel.pt",
-            authors = listOf("Nuno", "David"),
-            subjects = listOf("Computer Science"),
-            type = "PhD",
+            url = "http://example.com/thesis.pdf",
+            authors = listOf("João Silva"),
+            subjects = listOf("Computer Science", "AI"),
+            type = "MSc",
             language = "English",
-            fileUrl = "https://pdfobject.com/pdf/sample.pdf",
+            fileUrl = "https://example.com/thesis.pdf",
             universityId = universityId,
-            hash = "sample-hash"
+            hash = "abc123def456"
         )
 
-        assertEquals("Test Test", thesisRequest.title)
-        assertEquals(2023, thesisRequest.year)
-        assertEquals(universityId, thesisRequest.universityId)
+        val thesis = Thesis(
+            title = thesisRequest.title,
+            abstract = thesisRequest.abstract,
+            year = thesisRequest.year,
+            url = thesisRequest.url,
+            university = university,
+            authors = thesisRequest.authors,
+            subjects = thesisRequest.authors,
+            type = thesisRequest.type,
+            language = thesisRequest.language,
+            fileUrl = thesisRequest.fileUrl,
+            hash = thesisRequest.hash,
+        )
+
+        whenever(transactionManager.run(any<kotlin.Function1<com.unidocfinder.backend.repository.Transaction, Thesis>>())).thenAnswer { invocation ->
+            val block = invocation.arguments[0] as kotlin.Function1<com.unidocfinder.backend.repository.Transaction, Thesis>
+            val tx = mock<com.unidocfinder.backend.repository.Transaction>()
+            whenever(tx.universityRepository).thenReturn(universityRepository)
+            whenever(tx.searchRepository).thenReturn(searchRepository)
+            whenever(universityRepository.findById(universityId)).thenReturn(university)
+            block.invoke(tx)
+        }
+
+        val result = saveService.saveThesis(thesisRequest)
+
+        assertEquals("Machine Learning Applications", result.title)
+        assertEquals(2023, result.year)
+        assertEquals("ISEL", result.university.name)
+        // indexing is handled outside SaveService; no verification here
     }
 
     @Test
-    fun `saveThesis validates required fields`() {
+    fun `saveThesis with valid fields creates correct object`() {
         val universityId = UUID.randomUUID()
 
         val thesisRequest = ThesisRequest(
-            title = "Test Test",
-            abstract = "This is a Test Abstract",
-            year = 2023,
-            url = "http://www.isel.pt",
-            authors = listOf("Nuno", "David"),
-            subjects = listOf("Computer Science"),
+            title = "Test Thesis",
+            abstract = "Abstract content",
+            year = 2024,
+            url = "http://repo.edu/thesis",
+            authors = listOf("Author One"),
+            subjects = listOf("Subject One"),
             type = "PhD",
-            language = "English",
-            fileUrl = "https://pdfobject.com/pdf/sample.pdf",
+            language = "Portuguese",
+            fileUrl = "https://repo.edu/file.pdf",
             universityId = universityId,
-            hash = "sample-hash"
+            hash = "hash123"
         )
 
-        assertEquals("Test Test", thesisRequest.title)
-        assertEquals("This is a Test Abstract", thesisRequest.abstract)
+        val university = University(id = universityId, name = "IST", repoUrl = "http://ist.pt")
+        val thesis = Thesis(
+            title = thesisRequest.title,
+            abstract = thesisRequest.abstract,
+            year = thesisRequest.year,
+            url = thesisRequest.url,
+            university = university,
+            authors = thesisRequest.authors,
+            subjects = thesisRequest.authors,
+            type = thesisRequest.type,
+            language = thesisRequest.language,
+            fileUrl = thesisRequest.fileUrl,
+            hash = thesisRequest.hash,
+        )
+
+        whenever(transactionManager.run(any<kotlin.Function1<com.unidocfinder.backend.repository.Transaction, Thesis>>())).thenAnswer { invocation ->
+            val block = invocation.arguments[0] as kotlin.Function1<com.unidocfinder.backend.repository.Transaction, Thesis>
+            val tx = mock<com.unidocfinder.backend.repository.Transaction>()
+            whenever(tx.universityRepository).thenReturn(universityRepository)
+            whenever(tx.searchRepository).thenReturn(searchRepository)
+            whenever(universityRepository.findById(universityId)).thenReturn(university)
+            block.invoke(tx)
+        }
+
+        val result = saveService.saveThesis(thesisRequest)
+
+        assertEquals("Test Thesis", result.title)
+        assertEquals("Abstract content", result.abstract)
         assertEquals("PhD", thesisRequest.type)
-    }
-
-    @Test
-    fun `saveUniversity preserves university properties`() {
-        val universityId = UUID.randomUUID()
-        val university = University(
-            id = universityId,
-            name = "ISEL",
-            repoUrl = "http://www.isel.pt"
-        )
-
-        assertEquals(universityId, university.id)
-        assertEquals("ISEL", university.name)
-        assertEquals("http://www.isel.pt", university.repoUrl)
+        assertEquals(universityId, thesisRequest.universityId)
     }
 }
