@@ -61,7 +61,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = rs.getString("type"),
                 language = rs.getString("language"),
                 fileUrl = rs.getString("file_url"),
-                hash = rs.getString("hash") ?: "",
+                hash = rs.getString("hash"),
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -95,7 +95,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = rs.getString("type"),
                 language = rs.getString("language"),
                 fileUrl = rs.getString("file_url"),
-                hash = rs.getString("hash") ?: "",
+                hash = rs.getString("hash"),
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
