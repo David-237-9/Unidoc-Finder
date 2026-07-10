@@ -14,4 +14,5 @@ data class Thesis(
     val language: String,
     val fileUrl: String?,
     val university: University,
+    val hash: String,
 )

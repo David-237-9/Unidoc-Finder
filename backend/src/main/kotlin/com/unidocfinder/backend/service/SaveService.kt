@@ -23,6 +23,12 @@ class SaveService(private val transactionManager: TransactionManager) {
         }
     }
 
+    fun thesisExists(hash: String): Boolean {
+        return transactionManager.run {
+            searchRepository.existsByHash(hash)
+        }
+    }
+
     fun saveThesis(request: ThesisRequest): Thesis {
         return transactionManager.run {
             // Get the existing university by ID
@@ -40,7 +46,8 @@ class SaveService(private val transactionManager: TransactionManager) {
                 type = request.type,
                 language = request.language,
                 fileUrl = request.fileUrl,
-                university = university
+                university = university,
+                hash = request.hash
             )
 
             searchRepository.save(thesis)

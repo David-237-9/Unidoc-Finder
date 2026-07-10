@@ -7,4 +7,5 @@ import javax.management.Query
 @Named
 interface SearchRepository : Repository<Thesis>{
     fun search(query: String, page: Int, size: Int): List<Thesis>
+    fun existsByHash(hash: String): Boolean
 }

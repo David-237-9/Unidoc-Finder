@@ -41,7 +41,8 @@ class SearchServiceTest {
                 type = "PhD",
                 language = "English",
                 fileUrl = null,
-                university = "ISEL"
+                university = "ISEL",
+                hash = "sample-hash"
             ), ThesisDocument(
                 id = "2",
                 title = "Machine Learning",
@@ -53,9 +54,8 @@ class SearchServiceTest {
                 type = "Masters",
                 language = "English",
                 fileUrl = null,
-                university = "ISEL"
-
-
+                university = "ISEL",
+                hash = "sample-hash"
             )
         )
 

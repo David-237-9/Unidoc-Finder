@@ -64,7 +64,8 @@ class SaveControllerTest {
             type = "PhD",
             language = "English",
             fileUrl = "https://pdfobject.com/pdf/sample.pdf",
-            universityId = universityId
+            universityId = universityId,
+            hash = "sample-hash"
         )
         val thesis = Thesis(
             title = thesisRequest.title,
@@ -76,7 +77,8 @@ class SaveControllerTest {
             type = thesisRequest.type,
             language = thesisRequest.language,
             fileUrl = thesisRequest.fileUrl,
-            university = university
+            university = university,
+            hash = thesisRequest.hash
         )
 
         whenever(saveService.saveThesis(thesisRequest)).thenReturn(thesis)
@@ -100,7 +102,8 @@ class SaveControllerTest {
             type = "PhD",
             language = "English",
             fileUrl = "https://pdfobject.com/pdf/sample.pdf",
-            universityId = universityId
+            universityId = universityId,
+            hash = "sample-hash"
         )
 
         whenever(saveService.saveThesis(thesisRequest)).thenThrow(
@@ -125,7 +128,8 @@ class SaveControllerTest {
             type = "PhD",
             language = "English",
             fileUrl = "https://pdfobject.com/pdf/sample.pdf",
-            universityId = universityId
+            universityId = universityId,
+            hash = "sample-hash"
         )
 
         whenever(saveService.saveThesis(thesisRequest)).thenThrow(RuntimeException("Database error"))

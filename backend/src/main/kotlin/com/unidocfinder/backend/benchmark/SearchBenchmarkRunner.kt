@@ -183,6 +183,7 @@ class SearchBenchmarkRunner(
                 language = if (number % 5 == 0) "pt" else "en",
                 fileUrl = "https://benchmark.local/thesis/$number.pdf",
                 university = university,
+                hash = "benchmark-thesis-$number",
             )
         }
     }
@@ -213,6 +214,7 @@ class SearchBenchmarkRunner(
         language = language,
         fileUrl = fileUrl,
         university = university.name,
+        hash = hash,
     )
 
     /**

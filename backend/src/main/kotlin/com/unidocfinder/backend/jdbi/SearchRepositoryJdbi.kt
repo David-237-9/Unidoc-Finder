@@ -11,7 +11,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url, t.hash,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -30,6 +30,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = rs.getString("type"),
                 language = rs.getString("language"),
                 fileUrl = rs.getString("file_url"),
+                hash = rs.getString("hash") ?: "",
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -42,7 +43,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
     override fun findById(id: UUID): Thesis? {
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url, t.hash,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -60,6 +61,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = rs.getString("type"),
                 language = rs.getString("language"),
                 fileUrl = rs.getString("file_url"),
+                hash = rs.getString("hash") ?: "",
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -75,7 +77,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url, t.hash,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -93,6 +95,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = rs.getString("type"),
                 language = rs.getString("language"),
                 fileUrl = rs.getString("file_url"),
+                hash = rs.getString("hash") ?: "",
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),
@@ -105,8 +108,8 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
     override fun save(entity: Thesis) {
         handle.createUpdate(
             """
-            INSERT INTO thesis (id, title, abstract, year, url, authors, subjects, type, language, file_url, university_id)
-            VALUES (:id::uuid, :title, :abstract, :year, :url, :authors, :subjects, :type, :language, :fileUrl, :universityId::uuid)
+            INSERT INTO thesis (id, title, abstract, year, url, authors, subjects, type, language, file_url, university_id, hash)
+            VALUES (:id::uuid, :title, :abstract, :year, :url, :authors, :subjects, :type, :language, :fileUrl, :universityId::uuid, :hash)
             ON CONFLICT (id) DO UPDATE SET
                 title = EXCLUDED.title,
                 abstract = EXCLUDED.abstract,
@@ -117,14 +120,24 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = EXCLUDED.type,
                 language = EXCLUDED.language,
                 file_url = EXCLUDED.file_url,
-                university_id = EXCLUDED.university_id
+                university_id = EXCLUDED.university_id,
+                hash = EXCLUDED.hash
             """
         ).bind("id", entity.id.toString()).bind("title", entity.title).bind("abstract", entity.abstract)
             .bind("year", entity.year).bind("url", entity.url).bindArray("authors", String::class.java, entity.authors)
             .bindArray("subjects", String::class.java, entity.subjects).bind("type", entity.type)
             .bind("language", entity.language).bind("fileUrl", entity.fileUrl)
             .bind("universityId", entity.university.id.toString())
+            .bind("hash", entity.hash)
             .execute()
+    }
+
+    override fun existsByHash(hash: String): Boolean {
+        return handle.createQuery(
+            """
+            SELECT EXISTS(SELECT 1 FROM thesis WHERE hash = :hash)
+            """.trimIndent()
+        ).bind("hash", hash).mapTo(Boolean::class.java).one()
     }
 
     override fun deleteById(id: UUID) {
@@ -147,7 +160,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
         val offset = (page - 1) * size
         return handle.createQuery(
             """
-            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url,
+            SELECT t.id, t.title, t.abstract, t.year, t.url, t.authors, t.subjects, t.type, t.language, t.file_url, t.hash,
                    u.id as u_id, u.name as u_name, u.repo_url as u_repo_url
             FROM thesis t
             JOIN university u ON t.university_id = u.id
@@ -166,6 +179,7 @@ class SearchRepositoryJdbi(private val handle: Handle) : SearchRepository {
                 type = rs.getString("type"),
                 language = rs.getString("language"),
                 fileUrl = rs.getString("file_url"),
+                hash = rs.getString("hash") ?: "",
                 university = University(
                     id = UUID.fromString(rs.getString("u_id")),
                     name = rs.getString("u_name"),

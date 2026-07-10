@@ -14,4 +14,5 @@ data class ThesisRequest(
     val language: String,
     val fileUrl: String?,
     val universityId: UUID,
+    val hash: String,
 )

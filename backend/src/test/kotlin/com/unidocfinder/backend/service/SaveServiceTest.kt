@@ -39,7 +39,8 @@ class SaveServiceTest {
             type = "PhD",
             language = "English",
             fileUrl = "https://pdfobject.com/pdf/sample.pdf",
-            universityId = universityId
+            universityId = universityId,
+            hash = "sample-hash"
         )
 
         assertEquals("Test Test", thesisRequest.title)
@@ -61,7 +62,8 @@ class SaveServiceTest {
             type = "PhD",
             language = "English",
             fileUrl = "https://pdfobject.com/pdf/sample.pdf",
-            universityId = universityId
+            universityId = universityId,
+            hash = "sample-hash"
         )
 
         assertEquals("Test Test", thesisRequest.title)

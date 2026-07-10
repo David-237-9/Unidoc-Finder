@@ -28,7 +28,8 @@ class IndexElasticService(
                 type = thesis.type,
                 language = thesis.language,
                 fileUrl = thesis.fileUrl,
-                university = thesis.university.name
+                university = thesis.university.name,
+                hash = thesis.hash
             )
             thesisElasticRepository.save(document)
             logger.info("Indexed thesis with ID: ${thesis.id}")
@@ -56,7 +57,8 @@ class IndexElasticService(
                     type = thesis.type,
                     language = thesis.language,
                     fileUrl = thesis.fileUrl,
-                    university = thesis.university.name
+                    university = thesis.university.name,
+                    hash = thesis.hash
                 )
             }
 

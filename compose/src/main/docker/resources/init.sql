@@ -17,9 +17,34 @@ CREATE TABLE IF NOT EXISTS thesis (
     type TEXT NOT NULL,
     language TEXT NOT NULL,
     file_url TEXT,
+    hash TEXT,
     university_id UUID,
     FOREIGN KEY (university_id) REFERENCES university (id) ON DELETE CASCADE
 );
+
+-- Update already existing table
+ALTER TABLE thesis ADD COLUMN IF NOT EXISTS hash TEXT;
+-- Update already existing table
+UPDATE thesis
+SET hash = encode(
+        digest(
+                convert_to(
+                        COALESCE(
+                                NULLIF(url, ''),
+                                NULLIF(file_url, ''),
+                                COALESCE(title, 'null') || '|' ||
+                                COALESCE(array_to_string(authors, ','), '') || '|' ||
+                                COALESCE(year::TEXT, 'null')
+                        ),
+                        'UTF8'
+                ),
+                'sha1'
+        ),
+        'hex'
+           )
+WHERE hash IS NULL OR hash = '';
+
+CREATE UNIQUE INDEX IF NOT EXISTS thesis_hash_idx ON thesis(hash) WHERE hash IS NOT NULL AND hash <> '';
 
 INSERT INTO university (name, repo_url) VALUES
     ('Instituto Politécnico de Lisboa', 'https://repositorio.ipl.pt/server/oai/request'),

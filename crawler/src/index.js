@@ -27,7 +27,7 @@ const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
 const OUTPUT_DESTINATION_API_ONLY = 1
 const OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY = 2
 const OUTPUT_DESTINATION_BOTH = 3
-const outputDestination = Number(process.env.OUTPUT_DESTINATION || OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY)
+const outputDestination = Number(process.env.OUTPUT_DESTINATION || OUTPUT_DESTINATION_API_ONLY)
 
 validateOutputDestination(outputDestination)
 
@@ -178,7 +178,8 @@ function prepareDocument(record) {
         url: record.url || null,
         fileUrl: record.fileUrl || null,
         oaiIdentifier: record.oaiIdentifier || null,
-        datestamp: record.datestamp || null
+        datestamp: record.datestamp || null,
+        hash: hashText(resultKey(record))
     }
 }
 
@@ -195,12 +196,15 @@ async function saveDocumentToJsonl(documentStream, document) {
 
 /**
  * Sends one document to the thesis API and waits for the API response.
+ * First checks whether the document hash already exists in the API to avoid duplicates.
  * @param {object} document The compact document stored in the JSONL file.
  * @param {object} repository The repository configuration.
  * @returns {Promise<void>} A promise that resolves when the document has been accepted.
  */
 async function sendDocumentToApi(document, repository) {
     const payload = createDocumentRequest(document, repository)
+
+    if (await thesisExists(payload.hash)) return
 
     const response = await fetch(apiUrl, {
         method: "POST",
@@ -215,6 +219,30 @@ async function sendDocumentToApi(document, repository) {
         const responseBody = await response.text().catch(() => "")
         throw new Error(`Failed to save document "${payload.title}" (${response.status} ${response.statusText}): ${responseBody}`)
     }
+}
+
+/**
+ * Checks whether a thesis with the given hash already exists in the API.
+ * @param {string} hash The document hash.
+ * @returns {Promise<boolean>} True when the thesis already exists.
+ */
+async function thesisExists(hash) {
+    const existsUrl = new URL(`${apiUrl.replace(/\/$/, "")}/exists`)
+    existsUrl.searchParams.set("hash", hash)
+
+    const response = await fetch(existsUrl, {
+        method: "GET",
+        headers: {
+            "Accept": "application/json"
+        }
+    })
+
+    if (!response.ok) {
+        const responseBody = await response.text().catch(() => "")
+        throw new Error(`Failed to check document hash (${response.status} ${response.statusText}): ${responseBody}`)
+    }
+
+    return response.json()
 }
 
 /**
@@ -236,7 +264,8 @@ function createDocumentRequest(document, repository) {
         type: Array.isArray(document.type) ? document.type.join(", ") : String(document.type || ""),
         language: document.language || "",
         fileUrl: document.fileUrl || null,
-        universityId: repository.id
+        universityId: repository.id,
+        hash: document.hash
     }
 }
 

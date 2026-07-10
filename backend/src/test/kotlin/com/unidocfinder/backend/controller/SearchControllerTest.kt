@@ -41,7 +41,8 @@ class SearchControllerTest {
                 type = "PhD",
                 language = "English",
                 fileUrl = "https://pdfobject.com/pdf/sample.pdf",
-                university = "ISEL"
+                university = "ISEL",
+                hash = "sample-hash"
             )
         )
 

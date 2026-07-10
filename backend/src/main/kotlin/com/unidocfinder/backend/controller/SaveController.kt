@@ -51,4 +51,14 @@ class SaveController(private val saveService: SaveService) {
                 .body(mapOf("error" to (e.message ?: "Failed to create thesis")))
         }
     }
+
+    @GetMapping("/thesis/exists")
+    fun thesisExists(@RequestParam hash: String): ResponseEntity<*> {
+        return try {
+            ResponseEntity.ok(saveService.thesisExists(hash))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to (e.message ?: "Failed to check thesis hash")))
+        }
+    }
 }
