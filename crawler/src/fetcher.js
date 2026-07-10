@@ -1,6 +1,6 @@
 const DEFAULT_TIMEOUT_MS = Number(process.env.FETCH_TIMEOUT_MS || 30000)
 const DEFAULT_RETRIES = Number(process.env.FETCH_RETRIES || 2)
-const USER_AGENT = process.env.USER_AGENT || "UnidocFinderCrawler/0.1.0"
+const USER_AGENT = process.env.USER_AGENT || "UnidocFinderCrawler/1.0.0"
 
 /**
  * Waits for the requested number of milliseconds.
