@@ -9,28 +9,23 @@ export function useThesisSearch({query, page, size, filters}: {query: string; pa
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!query.trim()) {
-            setDocuments([]);
-            setError(null);
-            return;
-        }
 
         const controller = new AbortController();
 
         setIsLoading(true);
         setError(null);
 
-        // Map frontend filters to API params. For array filters we send the first selected value.
+        // Map frontend filters to API params. Send all selected values for array filters.
         const apiParams: import('../api/searchApi').SearchThesisParams = {
             query,
             page,
             size,
             university: filters?.university || null,
-            type: (filters?.category && filters.category.length > 0) ? filters.category[0] : null,
+            type: (filters?.category && filters.category.length > 0) ? filters.category : null,
             author: filters?.author || null,
-            subject: (filters?.subjects && filters.subjects.length > 0) ? filters.subjects[0] : null,
-            language: (filters?.language && filters.language.length > 0) ? filters.language[0] : null,
-            year: filters?.publicationRange ? String(filters.publicationRange[0]) : null
+            subjects: filters?.subjects || null,
+            language: filters?.language || null,
+            year: filters?.year || null
         };
 
         searchThesis(apiParams, controller.signal)

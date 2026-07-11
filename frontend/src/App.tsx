@@ -40,7 +40,7 @@ const PAGE_SIZE = 10;
 const initialFilters: SearchFilters = {
     university: '',
     category: [],
-    subjects: [],
+    subjects: '',
     author: '',
     language: [],
     publicationRange: null
@@ -89,9 +89,9 @@ export default function App() {
         universities: universitiesList
     }), [documents, universitiesList]);
 
-    const filteredDocuments = useMemo(() => {
-        return documents.filter((document) => matchesSearch(document, selectedType, filters));
-    }, [selectedType, documents, filters]);
+    // Use server-side filtered documents directly so pagination remains consistent
+    // (the server applies the filters passed via the search API)
+    const filteredDocuments = documents;
 
     const scrollToTop = () => {
         window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
@@ -172,7 +172,7 @@ function matchesSearch(
     const searchableSubjects = [document.title, document.abstract, ...document.subjects].join(' ');
     const matchesSubjects =
         filters.subjects.length === 0 ||
-        filters.subjects.every((subject) => normalizeForCompare(searchableSubjects).includes(normalizeForCompare(subject)));
+        normalizeForCompare(searchableSubjects).includes(normalizeForCompare(filters.subjects));
 
     const searchableAuthors = document.authors.join(' ');
     const matchesAuthor =

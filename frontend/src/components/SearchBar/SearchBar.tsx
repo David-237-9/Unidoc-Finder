@@ -30,20 +30,7 @@ export function SearchBar({
             }}
         >
             <label className={styles.selectLabel} htmlFor="doc-type">
-                <span>{formatTypeLabel(selectedType, documentTypes)}</span>
-                <select
-                    id="doc-type"
-                    value={selectedType}
-                    onChange={(event) => onTypeChange(event.target.value as string | 'All')}
-                >
-                    {options.map((opt) => (
-                        opt === 'All' ? (
-                            <option key="All" value="All">Todos</option>
-                        ) : (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        )
-                    ))}
-                </select>
+                <span>Pesquisa</span>
             </label>
 
             <label className={styles.inputWrapper} htmlFor="search-term">

@@ -19,10 +19,10 @@ export interface DocumentRecord {
 export interface SearchFilters {
     university: string;
     category: string[];
-    subjects: string[];
+    subjects: string;
     author: string;
-    language: string[];
-    publicationRange: [number, number] | null;
+    language: string;
+    year: string;
 }
 
 export interface OptionItem {
@@ -34,6 +34,6 @@ export interface FilterOptions {
     categories: OptionItem[];
     subjects: OptionItem[];
     languages: string[];
-    yearRanges: Array<{ label: string; value: [number, number] }>;
+    year: string[];
     universities: string[];
 }

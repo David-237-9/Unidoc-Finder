@@ -15,10 +15,10 @@ class SearchService(private val thesisElasticRepository: ThesisElasticRepository
         page: Int,
         size: Int,
         university: String? = null,
-        type: String? = null,
+        type: List<String>? = null,
         author: String? = null,
-        subject: String? = null,
-        language: String? = null,
+        subject: List<String>? = null,
+        language: List<String>? = null,
         year: String? = null
     ): Either<SearchError, List<ThesisDocument>> {
         return try {

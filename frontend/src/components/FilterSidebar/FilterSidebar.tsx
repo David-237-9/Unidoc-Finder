@@ -10,48 +10,17 @@ interface FilterSidebarProps {
     onFiltersChange: (filters: SearchFilters) => void;
 }
 
-const fallbackYearRanges: Array<{ label: string; value: [number, number] }> = [
-    {label: '2020 - 2029', value: [2020, 2029]},
-    {label: '2010 - 2019', value: [2010, 2019]},
-    {label: '2000 - 2009', value: [2000, 2009]},
-];
-
 export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebarProps) {
     const toggleCategory = (category: string) => {
         const nextCategories = toggleValue(filters.category, category);
         onFiltersChange({...filters, category: nextCategories});
     };
 
-    const toggleLanguage = (language: string) => {
-        const nextLanguages = toggleValue(filters.language, language);
-        onFiltersChange({...filters, language: nextLanguages});
-    };
-
-    const removeSubject = (subject: string) => {
-        onFiltersChange({...filters, subjects: filters.subjects.filter((item) => item !== subject)});
-    };
-
-    const toggleSubject = (subject: string) => {
-        const cleanSubject = subject.trim();
-
-        if (!cleanSubject) {
-            return;
-        }
-
-        onFiltersChange({...filters, subjects: toggleValue(filters.subjects, cleanSubject)});
-    };
-
-    const addSubject = (subject: string) => {
-        const cleanSubject = subject.trim();
-
-        if (!cleanSubject || filters.subjects.includes(cleanSubject)) {
-            return;
-        }
-
-        onFiltersChange({...filters, subjects: [...filters.subjects, cleanSubject]});
-    };
-
-    const yearRanges = options.yearRanges.length > 0 ? options.yearRanges : fallbackYearRanges;
+    const currentYear = new Date().getFullYear();
+    const years = Array.from(
+        { length: currentYear - 1970 + 1 },
+        (_, i) => currentYear - i
+    );
 
     return (
         <aside className={styles.sidebar} aria-label="Filtros de pesquisa">
@@ -105,82 +74,43 @@ export function FilterSidebar({filters, options, onFiltersChange}: FilterSidebar
                 <div className={styles.fieldWithIcon}>
                     <Globe2 size={15}/>
                     <input
-                        placeholder="Escreve a área"
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                                addSubject(event.currentTarget.value);
-                                event.currentTarget.value = '';
-                            }
-                        }}
+                        value={filters.subjects}
+                        placeholder="Escreve a área de estudo"
+                        onChange={(event) => onFiltersChange({...filters, subjects: event.target.value})}
                     />
-                </div>
-
-                {options.subjects.length > 0 ? (
-                    <div className={styles.suggestionList}>
-                        {options.subjects.slice(0, 10).map((subject) => {
-                            const isActive = filters.subjects.includes(subject.value);
-
-                            return (
-                                <button
-                                    key={subject.value}
-                                    type="button"
-                                    className={isActive ? styles.activeSuggestion : styles.suggestion}
-                                    onClick={() => toggleSubject(subject.value)}
-                                >
-                                    {subject.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                ) : null}
-
-                <div className={styles.tagList}>
-                    {filters.subjects.map((subjectValue) => {
-                        const found = options.subjects.find((s) => s.value === subjectValue);
-                        const label = found ? found.label : subjectValue;
-                        return <TagPill key={subjectValue} label={label} onRemove={() => removeSubject(subjectValue)}/>;
-                    })}
                 </div>
             </FilterSection>
 
             <FilterSection title="Idioma">
-                <div className={styles.checkboxGroup}>
-                    {options.languages.length > 0 ? (
-                        options.languages.map((language) => (
-                            <label key={language} className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    checked={filters.language.includes(language)}
-                                    onChange={() => toggleLanguage(language)}
-                                />
-                                <span>{language}</span>
-                            </label>
-                        ))
-                    ) : (
-                        <p className={styles.hint}>Os idiomas aparecem depois da pesquisa.</p>
-                    )}
+                <div className={styles.fieldWithIcon}>
+                    <Globe2 size={15}/>
+                    <select
+                        value={filters.language}
+                        onChange={(event) => onFiltersChange({...filters, language: event.target.value})}
+                        aria-label="Selecionar idioma"
+                    >
+                        <option value="">Todos os idiomas</option>
+                        <option value="por">Português</option>
+                        <option value="eng">Inglês</option>
+                    </select>
                 </div>
             </FilterSection>
 
-            <FilterSection title="Data">
-                <div className={styles.checkboxGroup}>
-                    {yearRanges.map((range) => (
-                        <label key={range.label} className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                checked={Boolean(
-                                    filters.publicationRange?.[0] === range.value[0] && filters.publicationRange?.[1] === range.value[1]
-                                )}
-                                onChange={(event) => {
-                                    onFiltersChange({
-                                        ...filters,
-                                        publicationRange: event.target.checked ? range.value : null
-                                    });
-                                }}
-                            />
-                            <span>{range.label}</span>
-                        </label>
-                    ))}
+            <FilterSection title="Ano">
+                <div className={styles.fieldWithIcon}>
+                    <Globe2 size={15}/>
+                    <select
+                        value={filters.year}
+                        onChange={(event) => onFiltersChange({...filters, year: event.target.value})}
+                        aria-label="Selecionar um Ano"
+                    >
+                        <option value="">Todos os anos</option>
+                        {years.map((year) => (
+                            <option key={year} value={year}>
+                                {year}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </FilterSection>
         </aside>

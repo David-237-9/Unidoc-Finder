@@ -68,3 +68,11 @@ For Windows (PowerShell):
 ```powershell
 Invoke-WebRequest -Uri http://localhost:8080/api/search/sync -Method POST -ContentType "application/json" -Verbose
 ```
+
+### Executing the Crawler
+To run the crawler service, use the following command:
+```bash
+npm install
+
+npm run index OUTPUT_DESTINATION=1
+```

@@ -8,10 +8,10 @@ interface ThesisElasticRepository {
         page: Int,
         size: Int,
         university: String?,
-        type: String?,
+        type: List<String>?,
         author: String?,
-        subject: String?,
-        language: String?,
+        subject: List<String>?,
+        language: List<String>?,
         year: String?
     ): List<ThesisDocument>
     fun save(entity: ThesisDocument): ThesisDocument
