@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "mocha": "^11.7.6"
+  },
+  "dependencies": {
+    "undici": "^8.7.0"
   }
 }

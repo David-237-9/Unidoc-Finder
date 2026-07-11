@@ -5,6 +5,7 @@ import { createHash } from "node:crypto"
 import { fetchText } from "./fetcher.js"
 import { parseOaiRecords, isThesis, matchesFilter, resultKey } from "./parser.js"
 import { REPOSITORIES } from "./repositories.js"
+import { triggerAPISync } from "./sync.js";
 
 applyCliEnvironmentOverrides()
 
@@ -51,7 +52,7 @@ async function crawler() {
     const outputDir = process.env.INDEX_DIR || "data"
     const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
 
-// Output destination modes:
+    // Output destination modes:
     const OUTPUT_DESTINATION_API_ONLY = 1
     const OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY = 2
     const OUTPUT_DESTINATION_BOTH = 3
@@ -500,6 +501,9 @@ async function crawler() {
 
     // Start
     await main()
+
+    // Synchronize API after crawling
+    await triggerAPISync(apiUrl)
 }
 
 /** *************** LOOP *************** **/
