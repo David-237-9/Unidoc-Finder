@@ -34,6 +34,5 @@ export interface FilterOptions {
     categories: OptionItem[];
     subjects: OptionItem[];
     languages: string[];
-    year: string[];
     universities: string[];
 }

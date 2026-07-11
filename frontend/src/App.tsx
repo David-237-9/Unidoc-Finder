@@ -42,8 +42,8 @@ const initialFilters: SearchFilters = {
     category: [],
     subjects: '',
     author: '',
-    language: [],
-    publicationRange: null
+    language: '',
+    year: ''
 };
 
 async function delay(ms: number): Promise<void> {
@@ -85,8 +85,7 @@ export default function App() {
         categories: TYPES_PT,
         subjects: SUBJECTS_PT,
         languages: uniqueSorted(documents.map((document) => document.language).filter(isMeaningfulValue)),
-        yearRanges: buildYearRanges(documents),
-        universities: universitiesList
+        universities: universitiesList,
     }), [documents, universitiesList]);
 
     // Use server-side filtered documents directly so pagination remains consistent
@@ -155,84 +154,10 @@ export default function App() {
     );
 }
 
-function matchesSearch(
-    document: DocumentRecord,
-    selectedType: DocumentType | 'All',
-    filters: SearchFilters
-): boolean {
-    const documentType = normalizeForCompare(document.type);
-    const matchesType = selectedType === 'All' || documentType === normalizeForCompare(selectedType);
-
-    const matchesUniversity =
-        !filters.university || normalizeForCompare(document.universityName).includes(normalizeForCompare(filters.university));
-
-    const matchesCategory =
-        filters.category.length === 0 || filters.category.some((category) => documentType === normalizeForCompare(category));
-
-    const searchableSubjects = [document.title, document.abstract, ...document.subjects].join(' ');
-    const matchesSubjects =
-        filters.subjects.length === 0 ||
-        normalizeForCompare(searchableSubjects).includes(normalizeForCompare(filters.subjects));
-
-    const searchableAuthors = document.authors.join(' ');
-    const matchesAuthor =
-        !filters.author || normalizeForCompare(searchableAuthors).includes(normalizeForCompare(filters.author));
-
-    const matchesLanguage =
-        filters.language.length === 0 || filters.language.some((language) => normalizeForCompare(language) === normalizeForCompare(document.language));
-
-    const matchesPublicationRange =
-        !filters.publicationRange ||
-        (document.year !== null && document.year >= filters.publicationRange[0] && document.year <= filters.publicationRange[1]);
-
-    return (
-        matchesType &&
-        matchesUniversity &&
-        matchesCategory &&
-        matchesSubjects &&
-        matchesAuthor &&
-        matchesLanguage &&
-        matchesPublicationRange
-    );
-}
-
-function buildFilterOptions(documents: DocumentRecord[]): FilterOptions {
-    const categories = uniqueSorted(documents.map((document) => document.type).filter(isMeaningfulValue));
-    const subjects = uniqueSorted(documents.flatMap((document) => document.subjects).filter(isMeaningfulValue));
-    return {
-        categories: categories.map(c => ({label: c, value: c})),
-        subjects: subjects.map(s => ({label: s, value: s})),
-        languages: uniqueSorted(documents.map((document) => document.language).filter(isMeaningfulValue)),
-        yearRanges: buildYearRanges(documents),
-        universities: []
-    };
-}
-
-function buildYearRanges(documents: DocumentRecord[]): Array<{ label: string; value: [number, number] }> {
-    const decades = new Map<number, [number, number]>();
-
-    documents.forEach((document) => {
-        if (document.year === null) {
-            return;
-        }
-
-        const start = Math.floor(document.year / 10) * 10;
-        decades.set(start, [start, start + 9]);
-    });
-
-    return Array.from(decades.entries())
-        .sort(([left], [right]) => right - left)
-        .map(([start, value]) => ({label: `${start} - ${value[1]}`, value}));
-}
-
 function uniqueSorted(values: string[]): string[] {
     return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 }
 
 function isMeaningfulValue(value: string): boolean {
     return Boolean(value && value.trim().toLowerCase() !== 'unknown');
-}
-
-function normalizeForCompare(value: string): string {
-    return value.trim().toLowerCase();
 }
