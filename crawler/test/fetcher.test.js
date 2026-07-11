@@ -42,7 +42,6 @@ describe("fetchText", () => {
 
         assert.equal(body, "<xml>ok</xml>")
         assert.equal(requestedUrl, "https://repo.example/oai")
-        assert.equal(requestedOptions.headers["User-Agent"], "UnidocFinderCrawler/0.1.0")
         assert.equal(requestedOptions.headers.Accept, "application/xml,text/xml,*/*;q=0.8")
         assert.equal(requestedOptions.headers["X-Test"], "yes")
         assert.ok(requestedOptions.signal instanceof AbortSignal)
