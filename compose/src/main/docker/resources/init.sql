@@ -46,6 +46,8 @@ WHERE hash IS NULL OR hash = '';
 
 CREATE UNIQUE INDEX IF NOT EXISTS thesis_hash_idx ON thesis(hash) WHERE hash IS NOT NULL AND hash <> '';
 
+CREATE UNIQUE INDEX IF NOT EXISTS university_name_idx ON university(name);
+
 INSERT INTO university (name, repo_url) VALUES
     ('Instituto Politécnico de Lisboa', 'https://repositorio.ipl.pt/server/oai/request'),
     ('Universidade de Lisboa', 'https://repositorio.ul.pt/server/oai/request'),
@@ -61,4 +63,5 @@ INSERT INTO university (name, repo_url) VALUES
     ('Universidade dos Açores', 'https://repositorio.uac.pt/server/oai/request'),
     ('Universidade da Madeira', 'https://digituma.uma.pt/server/oai/request'),
     ('Universidade Aberta', 'https://repositorioaberto.uab.pt/server/oai/request'),
-    ('ISCTE - Instituto Universitário de Lisboa', 'https://repositorio.iscte-iul.pt/oai/request');
+    ('ISCTE - Instituto Universitário de Lisboa', 'https://repositorio.iscte-iul.pt/oai/request')
+ON CONFLICT (name) DO NOTHING;
