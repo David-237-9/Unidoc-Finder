@@ -36,21 +36,20 @@ Podes alterar os parâmetros com `--args`:
 
 Parâmetros disponíveis:
 
-| Parâmetro              |                   Default | Descrição                                                                        |
-| ---------------------- | ------------------------: | -------------------------------------------------------------------------------- |
-| `benchmark.query`      | `sustainable development` | Texto pesquisado no Elasticsearch                                                |
-| `benchmark.rows`       |                    `5000` | Número de teses sintéticas criadas em memória e indexadas                        |
-| `benchmark.page`       |                       `1` | Página pedida na pesquisa                                                        |
-| `benchmark.size`       |                      `10` | Tamanho da página pedida                                                         |
-| `benchmark.warmup`     |                      `10` | Iterações descartadas antes da medição                                           |
-| `benchmark.iterations` |                     `100` | Iterações medidas                                                                |
-| `benchmark.index`      |                    `true` | Se deve indexar dados no Elasticsearch antes da medição                          |
-| `benchmark.cleanup`    |                    `true` | Se deve apagar documentos antigos do benchmark antes da execução e limpar no fim |
+| Parâmetro              |                   Default | Descrição                                                                |
+| ---------------------- | ------------------------: |--------------------------------------------------------------------------|
+| `benchmark.query`      | `sustainable development` | Texto pesquisado no Elasticsearch                                        |
+| `benchmark.rows`       |                    `5000` | Número de teses criadas em memória e indexadas                           |
+| `benchmark.page`       |                       `1` | Página pedida na pesquisa                                                |
+| `benchmark.size`       |                      `10` | Tamanho da página pedida                                                 |
+| `benchmark.warmup`     |                      `10` | Iterações descartadas antes da medição                                   |
+| `benchmark.iterations` |                     `100` | Iterações medidas                                                        |
+| `benchmark.cleanup`    |                    `true` | Se deve apagar documentos do benchmark antes da execução e limpar no fim |
 
 ## Notas importantes
 
 * O benchmark usa UUIDs determinísticos, por isso execuções repetidas não criam documentos duplicados no Elasticsearch.
-* Os dados sintéticos são criados em memória e indexados diretamente no Elasticsearch.
+* Os dados de benchmark são criados em memória e indexados diretamente no Elasticsearch.
 * O benchmark não insere dados no PostgreSQL.
 * A medição é feita ao nível da aplicação, através do repositório Elasticsearch usado pelo backend.
 * Para resultados mais estáveis, corra o benchmark mais do que uma vez e ignore a primeira execução, porque Elasticsearch e JVM podem ainda estar "frios".

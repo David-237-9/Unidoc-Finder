@@ -74,5 +74,5 @@ To run the crawler service, use the following command:
 ```bash
 npm install
 
-npm run index OUTPUT_DESTINATION=1
+npm run index
 ```

@@ -29,7 +29,6 @@ class SearchBenchmarkRunner(
     @Value("\${benchmark.size:10}") private val size: Int,
     @Value("\${benchmark.warmup:10}") private val warmup: Int,
     @Value("\${benchmark.iterations:100}") private val iterations: Int,
-    @Value("\${benchmark.index:true}") private val index: Boolean,
     @Value("\${benchmark.cleanup:true}") private val cleanup: Boolean,
 ) : CommandLineRunner {
     private val logger = LoggerFactory.getLogger(SearchBenchmarkRunner::class.java)
@@ -50,8 +49,7 @@ class SearchBenchmarkRunner(
 
             if (cleanup) deleteBenchmarkData(benchmarkTheses)
 
-            if (index) indexElasticsearch(benchmarkTheses)
-            else logger.info("Skipping Elasticsearch indexing because benchmark.index=false")
+            indexElasticsearch(benchmarkTheses)
 
             val elasticResultCount = elasticSearch().size
 
