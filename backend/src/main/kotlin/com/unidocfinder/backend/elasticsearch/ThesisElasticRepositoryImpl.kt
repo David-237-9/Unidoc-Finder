@@ -67,7 +67,7 @@ class ThesisElasticRepositoryImpl(
 
         // Handle multiple subjects - search similar to main query with multi-match
         if (!subject.isNullOrEmpty()) {
-            val subjectFields = listOf("title", "abstract", "subjects")
+            val subjectFields = listOf("subjects")
             if (subject.size == 1) {
                 // Single subject: use multi-match with AND operator across relevant fields
                 val normalizedSubject = normalizeSearchQuery(subject[0])
