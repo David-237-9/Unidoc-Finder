@@ -62,6 +62,7 @@ const shouldSendToApi = outputDestination === OUTPUT_DESTINATION_API_ONLY || out
 const shouldSaveToDocumentsJsonl = outputDestination === OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY || outputDestination === OUTPUT_DESTINATION_BOTH
 const seenDocumentHashes = new Set()
 let documentCount = 0
+let sentDocumentsCount = 0
 
 /**
  * Runs the complete crawl process.
@@ -72,7 +73,7 @@ async function main() {
     const documentsPath = path.join(outputDir, "documents.jsonl")
 
     console.log("Crawling thesis/dissertation records.")
-    console.log(`Repositories: ${selectedRepositories.map(repository => repository.id).join(", ")}`)
+    console.log(`Repositories: ${selectedRepositories.map(repository => repository.name).join(", ")}`)
     console.log(`Destination mode: ${describeOutputDestination(outputDestination)}`)
 
     if (shouldSendToApi) console.log(`API: ${apiUrl}`)
@@ -247,6 +248,8 @@ async function sendDocumentToApi(document, repository) {
         const responseBody = await response.text().catch(() => "")
         throw new Error(`Failed to save document "${payload.title}" (${response.status} ${response.statusText}): ${responseBody}`)
     }
+
+    sentDocumentsCount++
 }
 
 /**
@@ -445,9 +448,7 @@ function shouldPrintProgress(processed, currentPageRecords) {
  * @returns {void}
  */
 function printProgress(page, processed, kept) {
-    const memory = process.memoryUsage()
-    const heapMb = Math.round(memory.heapUsed / 1024 / 1024)
-    console.log(`  Page ${page}; processed: ${processed}; kept here: ${kept}; total: ${documentCount}; heap: ${heapMb} MB`)
+    console.log(`  Page ${page}; processed: ${processed}; filtered: ${kept}; total filtered: ${documentCount}; total sent: ${sentDocumentsCount}`)
 }
 
 /**
