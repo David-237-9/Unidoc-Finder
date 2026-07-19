@@ -41,6 +41,15 @@ const maxDescriptionChars = Number(process.env.MAX_DESCRIPTION_CHARS || 2000)
 const outputDir = process.env.INDEX_DIR || "data"
 const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
 
+const apiToken = process.env.UF_ACCESS_TOKEN || "TEST_TOKEN" // TODO: Remove dummy token
+
+if (!apiToken) { // Token is required
+    throw new Error("WARNING: UF_ACCESS_TOKEN is not set!")
+}
+if (apiToken === "TEST_TOKEN") { // TODO: Remove dummy token
+    console.warn("WARNING: Using a dummy API token! This is only for local testing.")
+}
+
 // Output destination modes:
 const OUTPUT_DESTINATION_API_ONLY = 1
 const OUTPUT_DESTINATION_DOCUMENTS_JSONL_ONLY = 2
@@ -228,6 +237,7 @@ async function sendDocumentToApi(document, repository) {
         method: "POST",
         headers: {
             "Accept": "application/json",
+            "Authorization": `Bearer ${apiToken}`,
             "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
@@ -492,4 +502,4 @@ function getSelectedRepositories() {
 await main()
 
 // Synchronize API after crawling
-await triggerAPISync(apiUrl)
+await triggerAPISync(apiUrl, apiToken)
