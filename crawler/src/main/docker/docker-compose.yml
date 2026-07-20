@@ -1,0 +1,7 @@
+services:
+  unidoc-crawler:
+    build:
+      context: ../../..
+      dockerfile: src/main/docker/Dockerfile
+    image: unidoc-crawler
+    container_name: unidoc-crawler

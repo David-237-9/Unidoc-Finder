@@ -1,0 +1,16 @@
+FROM node:24.14.0-alpine AS dev
+
+WORKDIR /app
+
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+
+RUN corepack enable
+
+COPY --chown=node:node . .
+
+RUN npm install
+
+USER node
+
+CMD ["npm", "run", "index"]

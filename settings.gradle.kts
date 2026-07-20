@@ -1,2 +1,2 @@
 rootProject.name = "Unidoc-Finder"
-include("frontend", "backend", "compose")
+include("frontend", "backend", "compose", "crawler")

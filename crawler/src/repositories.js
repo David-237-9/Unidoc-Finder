@@ -5,7 +5,7 @@
 async function fetchRepositories () {
     const page = 1
     const size = 100
-    const url = `http://localhost:8080/api/universities?page=${page}&size=${size}`;
+    const url = (process.env.UNIVERSITY_API_URL || "http://localhost:8080/api/universities") + `?page=${page}&size=${size}`
 
     console.log(`Fetching repositories from ${url}...`)
     const response = await fetch(url, {

@@ -11,6 +11,8 @@ services:
         condition: service_healthy
     networks:
       - unidoc-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/api/health > /dev/null"]
   unidoc-frontend:
     image: unidoc-frontend
     container_name: unidoc-frontend
@@ -52,6 +54,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+  unidoc-crawler:
+    image: unidoc-crawler
+    container_name: unidoc-crawler
+    depends_on:
+      unidoc-backend:
+        condition: service_healthy
+      unidoc-elasticsearch:
+        condition: service_healthy
+    networks:
+      - unidoc-network
 
 volumes:
   db_data:
