@@ -60,6 +60,8 @@ docker-compose -f compose/build/docker-compose-runner-local.yml down
 ```
 
 ### Sync Elasticsearch
+The crawler requests the syncing automatically after each crawl, but you can also manually trigger a sync by sending a POST request to the backend API:
+
 For Linux/Mac:
 ```bash
 curl -X POST http://localhost:8080/api/search/sync -H "Content-Type: application/json" -v
@@ -70,7 +72,8 @@ Invoke-WebRequest -Uri http://localhost:8080/api/search/sync -Method POST -Conte
 ```
 
 ### Executing the Crawler
-To run the crawler service, use the following command:
+The crawler is already set up to run automatically when the backend starts.
+However, if you want to run it manually, you can do so by executing the following commands in the `crawler` directory:
 ```bash
 npm install
 
