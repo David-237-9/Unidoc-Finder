@@ -1,3 +1,5 @@
+const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080"
+
 /**
  * Fetches the list of repositories from the API.
  * @return {Promise<Array>} A promise that resolves to an array of repository objects.
@@ -5,7 +7,7 @@
 async function fetchRepositories () {
     const page = 1
     const size = 100
-    const url = (process.env.UNIVERSITY_API_URL || "http://localhost:8080/api/universities") + `?page=${page}&size=${size}`
+    const url = `${apiUrl}/api/universities?page=${page}&size=${size}`
 
     console.log(`Fetching repositories from ${url}...`)
     const response = await fetch(url, {
@@ -17,11 +19,7 @@ async function fetchRepositories () {
 
     if (!response.ok) throw new Error('Failed fetching repositories: ' + response.statusText)
 
-    const repos = await response.json()
-
-    return repos
-        // Debugging only
-        // .filter(repo => repo.name === 'Universidade de Aveiro')
+    return await response.json()
 }
 
 export const REPOSITORIES = await fetchRepositories() // use OLD_REPOSITORIES for debuggind

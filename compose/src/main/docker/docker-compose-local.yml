@@ -14,5 +14,4 @@ services:
       - ../../../../frontend/package.json:/app/package.json
   unidoc-crawler:
     environment:
-      - THESIS_API_URL=http://unidoc-backend:8080/api/thesis
-      - UNIVERSITY_API_URL=http://unidoc-backend:8080/api/universities
+      - THESIS_API_URL=http://unidoc-backend:8080

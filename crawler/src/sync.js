@@ -8,7 +8,7 @@ import { request } from "undici";
  * @return {Promise<void>} A promise that resolves when the sync is complete or rejects if an error occurs.
  */
 export async function triggerAPISync(apiUrl, apiToken) {
-    const syncUrl = apiUrl.replace(/\/api\/thesis\/?$/, "/api/search/sync")
+    const syncUrl = `${apiUrl}/api/search/sync`
 
     console.log('Triggering API synchronization at', syncUrl);
 

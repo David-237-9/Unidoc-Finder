@@ -39,7 +39,7 @@ const maxDocuments = Number(process.env.MAX_DOCUMENTS || 0)
 const progressEvery = Number(process.env.PROGRESS_EVERY || 5000)
 const maxDescriptionChars = Number(process.env.MAX_DESCRIPTION_CHARS || 2000)
 const outputDir = process.env.INDEX_DIR || "data"
-const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
+const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080"
 
 const accessTokenPath = process.env.UF_ACCESS_TOKEN_FILE || "/run/secrets/UF_ACCESS_TOKEN"
 const apiToken = fs.readFileSync(accessTokenPath, "utf8").trim()
@@ -230,7 +230,7 @@ async function sendDocumentToApi(document, repository) {
 
     if (await thesisExists(payload.hash)) return
 
-    const response = await fetch(apiUrl, {
+    const response = await fetch(`${apiUrl}/api/thesis`, {
         method: "POST",
         headers: {
             "Accept": "application/json",
@@ -254,7 +254,7 @@ async function sendDocumentToApi(document, repository) {
  * @returns {Promise<boolean>} True when the thesis already exists.
  */
 async function thesisExists(hash) {
-    const existsUrl = new URL(`${apiUrl.replace(/\/$/, "")}/exists`)
+    const existsUrl = new URL(`${apiUrl}/api/thesis/exists`)
     existsUrl.searchParams.set("hash", hash)
 
     const response = await fetch(existsUrl, {
