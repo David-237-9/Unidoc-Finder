@@ -107,7 +107,7 @@ async function main() {
     console.log(`Crawl completed in ${elapsed}s.`)
     console.log(`Processed documents: ${documentCount}`)
 
-    if (shouldSendToApi) console.log(`Sent to API: ${documentCount}`)
+    if (shouldSendToApi) console.log(`Sent to API: ${sentDocumentsCount}`)
     if (shouldSaveToDocumentsJsonl) console.log(`Saved file: ${documentsPath}`)
 }
 
@@ -132,7 +132,7 @@ async function crawlRepository(repository, documentStream) {
         if (maxDocuments > 0 && documentCount >= maxDocuments) return
 
         if (maxRecordsPerRepository > 0 && processed >= maxRecordsPerRepository) {
-            console.log(`MAX_RECORDS_PER_REPO reached for ${repository.id}: ${processed}`)
+            console.log(`MAX_RECORDS_PER_REPO reached for ${repository.name}: ${processed}`)
             return
         }
 
@@ -142,12 +142,12 @@ async function crawlRepository(repository, documentStream) {
         const {records, resumptionToken, oaiError} = parseOaiRecords(xml, repository)
 
         if (oaiError) {
-            console.warn(`OAI error for ${repository.id}: ${oaiError.code}${oaiError.message ? ` - ${oaiError.message}` : ""}`)
+            console.warn(`OAI error for ${repository.name}: ${oaiError.code}${oaiError.message ? ` - ${oaiError.message}` : ""}`)
             return
         }
 
         if (records.length === 0) {
-            console.warn(`No OAI records found for ${repository.id} on page ${page}. Check the endpoint URL and metadataPrefix.`)
+            console.warn(`No OAI records found for ${repository.name} on page ${page}. Check the endpoint URL and metadataPrefix.`)
             return
         }
 
@@ -180,7 +180,7 @@ async function crawlRepository(repository, documentStream) {
         if (nextUrl && crawlDelayMs > 0) await delay(crawlDelayMs)
     }
 
-    console.log(`Finished ${repository.id}. Processed: ${processed}; kept: ${kept}; total: ${documentCount}\n`)
+    console.log(`Finished ${repository.name}. Processed: ${processed}; kept: ${kept}; total kept: ${documentCount}\n; sent: ${sentDocumentsCount}`);
 }
 
 /**
