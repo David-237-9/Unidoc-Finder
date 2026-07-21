@@ -41,14 +41,10 @@ const maxDescriptionChars = Number(process.env.MAX_DESCRIPTION_CHARS || 2000)
 const outputDir = process.env.INDEX_DIR || "data"
 const apiUrl = process.env.THESIS_API_URL || "http://localhost:8080/api/thesis"
 
-const apiToken = process.env.UF_ACCESS_TOKEN || "TEST_TOKEN" // TODO: Remove dummy token
+const accessTokenPath = process.env.UF_ACCESS_TOKEN_FILE || "/run/secrets/UF_ACCESS_TOKEN"
+const apiToken = fs.readFileSync(accessTokenPath, "utf8").trim()
 
-if (!apiToken) { // Token is required
-    throw new Error("WARNING: UF_ACCESS_TOKEN is not set!")
-}
-if (apiToken === "TEST_TOKEN") { // TODO: Remove dummy token
-    console.warn("WARNING: Using a dummy API token! This is only for local testing.")
-}
+if (!apiToken) throw new Error("UF_ACCESS_TOKEN Docker secret is empty")
 
 // Output destination modes:
 const OUTPUT_DESTINATION_API_ONLY = 1

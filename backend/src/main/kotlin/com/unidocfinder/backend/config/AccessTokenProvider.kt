@@ -7,8 +7,10 @@ import java.nio.file.Path
 
 @Component
 class AccessTokenProvider(
-//    @Value("\${uf.secret.path:/run/secrets/uf_access_token}")
-//    secretPath: String
+    @Value("\${uf.secret.path:/run/secrets/UF_ACCESS_TOKEN}")
+    secretPath: String
 ) {
-    val token: String = "TEST_TOKEN" // Files.readString(Path.of(secretPath)).trim()
+    val token: String = Files.readString(Path.of(secretPath))
+        .trim()
+        .also { require(it.isNotEmpty()) { "UF_ACCESS_TOKEN Docker secret is empty" } }
 }

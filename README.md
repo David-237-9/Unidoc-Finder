@@ -22,16 +22,29 @@ Unidoc-Finder/
 
 ## Quick Start
 
+### Automatic Access Token Generation
+
+Every system build automatically generates a new random 256-bit token in the backend image.
+The crawler is built in the same Docker Compose build and copies that exact token from the backend image, so both services use the same value.
+
+Both applications read the generated value from `/run/secrets/UF_ACCESS_TOKEN`.
+
+> **Security warning:** This project deliberately persists the generated token in both images.
+> Anyone who can pull, save, or inspect either image can recover it. The images should be kept private.
+
 ### Build Everything
 
 ```bash
- gradle build
+gradle build
 ```
 
 This will:
 1. Build the backend JAR
 2. Build the frontend app
-3. Create Docker images for both services
+3. Build the backend, frontend, and crawler Docker images
+4. Generate the local Docker Compose runner
+
+The backend image is built without Docker layer caching so each `gradle build` generates a new token. Building only the crawler copies the token from the existing `unidoc-backend:latest` image so the two images remain compatible.
 
 ### Run with Docker Compose
 
@@ -46,36 +59,21 @@ Services will be available at:
 - **Frontend**: http://localhost:5173
 - **Database**: localhost:5432 (PostgreSQL)
 - **Elasticsearch**: http://localhost:9200
--
-### Run Containers
+
+### Change the Access Token
+
+Run a new system build and recreate the backend and crawler containers:
 
 ```bash
-docker-compose -f compose/build/docker-compose-runner-local.yml up -d
+gradle build
+
+docker compose -f compose/build/docker-compose-runner-local.yml up -d --force-recreate unidoc-backend unidoc-crawler
 ```
+
+Each system build generates a different token. Existing containers continue using their old images until they are recreated.
 
 ### Stop Containers
 
 ```bash
 docker-compose -f compose/build/docker-compose-runner-local.yml down
-```
-
-### Sync Elasticsearch
-The crawler requests the syncing automatically after each crawl, but you can also manually trigger a sync by sending a POST request to the backend API:
-
-For Linux/Mac:
-```bash
-curl -X POST http://localhost:8080/api/search/sync -H "Content-Type: application/json" -v
-```
-For Windows (PowerShell):
-```powershell
-Invoke-WebRequest -Uri http://localhost:8080/api/search/sync -Method POST -ContentType "application/json" -Verbose
-```
-
-### Executing the Crawler
-The crawler is already set up to run automatically when the backend starts.
-However, if you want to run it manually, you can do so by executing the following commands in the `crawler` directory:
-```bash
-npm install
-
-npm run index
 ```

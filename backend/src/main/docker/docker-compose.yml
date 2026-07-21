@@ -3,5 +3,14 @@ services:
     build:
       context: ../../..
       dockerfile: src/main/docker/Dockerfile
+      no_cache: true
     image: unidoc-backend
     container_name: unidoc-backend
+  unidoc-crawler:
+    build:
+      context: ../../../../crawler
+      dockerfile: src/main/docker/Dockerfile
+      additional_contexts:
+        access-token: service:unidoc-backend
+    image: unidoc-crawler
+    container_name: unidoc-crawler

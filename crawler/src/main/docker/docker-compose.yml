@@ -3,5 +3,7 @@ services:
     build:
       context: ../../..
       dockerfile: src/main/docker/Dockerfile
+      additional_contexts:
+        access-token: docker-image://unidoc-backend:latest
     image: unidoc-crawler
     container_name: unidoc-crawler
