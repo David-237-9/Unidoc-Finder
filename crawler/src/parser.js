@@ -9,8 +9,6 @@ const STOPWORDS = new Set([
  * Parses OAI-PMH Dublin Core records from an XML page.
  * @param {string} xml The OAI-PMH XML response.
  * @param {object} repository The repository configuration object.
- * @param {string} repository.id The repository identifier.
- * @param {string} repository.name The repository display name.
  * @returns {{records: object[], resumptionToken: string|null}} The parsed records and the next OAI-PMH token.
  */
 export function parseOaiRecords(xml, repository) {
